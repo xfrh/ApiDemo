@@ -3,7 +3,7 @@
 @using System.Text.Json
 @inject IHttpClientFactory _client
 
-<h3>Global Navigate Plan</h3>
+<h2>Global Navigate Plan</h2>
 
 @if(!string.IsNullOrEmpty(errorMessage))
 {
@@ -35,7 +35,7 @@ else
 }
 
 @code {
-    string? errorMessage;
+    string errorMessage;
     List<Coordinace> lst;
 
     protected async override void OnInitialized()
