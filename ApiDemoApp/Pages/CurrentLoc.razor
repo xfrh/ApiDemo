@@ -37,17 +37,14 @@ else
     string? errorMessage;
     Coordinace? coordinace;
 
-    protected async override void OnInitialized()
+    protected  override async Task OnInitializedAsync()
     {
         var client = _client.CreateClient("nav");
         try
         {
-            var results = await client.GetFromJsonAsync<string>("pose");
-            if (results != null)
-            {
-                coordinace = JsonSerializer.Deserialize<Coordinace>(results);
-                errorMessage = null;
-            }
+            coordinace = await client.GetFromJsonAsync<Coordinace>("pose");
+            errorMessage = null;
+
         }catch(Exception ex)
         {
             errorMessage = ex.Message;

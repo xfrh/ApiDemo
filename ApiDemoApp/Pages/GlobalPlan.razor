@@ -38,9 +38,9 @@ else
     string errorMessage;
     List<Coordinace> lst;
 
-    protected async override void OnInitialized()
+    protected  override async Task OnInitializedAsync()
     {
-        var client = _client.CreateClient("nav");
+       var client = _client.CreateClient("nav");
         try
         {
             lst = await client.GetFromJsonAsync<List<Coordinace>>("global_plan");
@@ -50,5 +50,6 @@ else
             errorMessage = ex.Message;
         }
     }
+  
 
 }

@@ -38,7 +38,7 @@ else
     string? errorMessage;
     List<Coordinace>? lst;
 
-    protected async override void OnInitialized()
+    protected  override async Task OnInitializedAsync()
     {
         var client = _client.CreateClient("nav");
         try

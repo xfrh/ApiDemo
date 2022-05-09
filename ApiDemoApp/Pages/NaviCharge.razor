@@ -6,16 +6,16 @@
 <h3>Nav to Charge</h3>
 <p>
     <label>Type:</label>
-    <select name="type"  @onchange="takeType">
-        <option value=""></option>
-        <option value="0">0</option>
-        <option value="1">1</option>
+    <select name="type"  @bind="@type" >
+       
+        <option>0</option>
+        <option>1</option>
     </select>
 
 </p>
 <p>
     <label>Point:</label>
-    <input type="text" value=@point />
+    <input type="text" @bind-value="@point" />
 </p>
 
 <p>
@@ -33,6 +33,7 @@
         var client = _client.CreateClient("cmd");
         try
         {
+            
             Charge charge = new Charge()
                 {
                     type = this.type,
@@ -49,12 +50,7 @@
             errorMessage = ex.Message;
         }
     }
-    private void takeType(ChangeEventArgs e)
-    {
-        if (string.IsNullOrWhiteSpace(e.Value.ToString()))
-            return;
-        type = int.Parse(e.Value.ToString());
-    }
+   
 
 
 }

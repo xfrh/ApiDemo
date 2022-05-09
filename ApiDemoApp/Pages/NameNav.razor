@@ -3,7 +3,7 @@
 @using System.Text.Json
 @inject IHttpClientFactory _client;
 <h3>Navigation by name</h3>
-<p><input type="text" placeholder="point name" value=@point required /></p>
+<p><input type="text" placeholder="point name" @bind-value="@point" required /></p>
 <p> 
  <input type="button" value="提交" @onclick="StartNav" />
  <input type="button" value="取消" @onclick="CancelNav" />

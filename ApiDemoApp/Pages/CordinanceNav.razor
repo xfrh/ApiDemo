@@ -5,13 +5,13 @@
 <h3>Send Coordinate Navigation</h3>
 
     <p>
-       <label>x 坐标:</label> <input type="number" value=@x_axis placeholder="x 坐标" />
+       <label>x 坐标:</label> <input type="number" @bind-value="@x_axis" placeholder="x 坐标" />
     </p>
     <p>
-       <label>y 坐标:</label> <input type ="number" value =@y_axis  placeholder="y 坐标"/>
+       <label>y 坐标:</label> <input type ="number" @bind-value ="@y_axis"  placeholder="y 坐标"/>
     </p>
     <p>
-      <label>&nbsp;&nbsp;弧度:</label>  <input type="number" value=@theta placeholder="弧度" />
+      <label>&nbsp;&nbsp;弧度:</label>  <input type="number" @bind-value="@theta" placeholder="弧度" />
     </p>
     <p>
         <input type="button" value="提交" @onclick="StartNav" />

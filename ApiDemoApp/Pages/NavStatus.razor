@@ -31,12 +31,12 @@ else
 @code {
     string? errorMessage;
     MoveStatus? moveStatus;
-    protected async override void OnInitialized()
+    protected  override async Task OnInitializedAsync()
     {
         var client = _client.CreateClient("nav");
         try
         {
-            moveStatus = await client.GetFromJsonAsync<MoveStatus>("status");
+            moveStatus = await client.GetFromJsonAsync<MoveStatus>("movebase_status");
             errorMessage = null;
 
         }catch(Exception ex)

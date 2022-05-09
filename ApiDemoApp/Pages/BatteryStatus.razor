@@ -30,7 +30,7 @@ else
 @code {
     string? errorMessage;
     Battery? battery;
-    protected async override void OnInitialized()
+   protected  override async Task OnInitializedAsync()
     {
         var client = _client.CreateClient("nav");
         try
