@@ -1,0 +1,73 @@
+﻿@page "/CoNav"
+@using ApiDemoApp.Models
+@using System.Text.Json
+@inject IHttpClientFactory _clientFactory;
+<h3>Send Coordinate Navigation</h3>
+
+    <p>
+        <input type="number" value=@x_axis placeholder="x 坐标" />
+    </p>
+    <p>
+        <input type ="number" value =@y_axis  placeholder="y 坐标"/>
+    </p>
+    <p>
+        <input type="number" value=@theta placeholder="弧度" />
+    </p>
+    <p>
+        <input type="button" value="提交" @onclick="StartNav" />
+        <input type="button" value="取消" @onclick="CancelNav" />
+    </p>
+    <p>
+        <label>@erroMessage</label>
+    </p>
+
+@code {
+    string? erroMessage;
+    float x_axis;
+    float y_axis;
+    float theta;
+    public async Task StartNav()
+    {
+        var client = _clientFactory.CreateClient("cmd");
+        try
+        {
+            Coordinace coordinace = new Coordinace()
+                  {
+                    x_axis = this.x_axis,
+                    y_axis = this.y_axis,
+                    theta =this.theta
+                  };
+            var result =await client.PostAsJsonAsync<string>("nav", JsonSerializer.Serialize(coordinace));
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                erroMessage = "Nav data correctly received";
+            }
+            else
+            {
+                erroMessage = "Something wrong with server";
+            }
+
+        }catch(Exception ex)
+        {
+            erroMessage = ex.Message;
+        }
+    }
+
+    public async Task CancelNav()
+    {
+        var client = _clientFactory.CreateClient("cmd");
+        try
+        {
+            var result = await client.PostAsJsonAsync("cancel_goal", string.Empty);
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                erroMessage = "correctly cancel the naviagtion";
+            else
+                erroMessage = " something wrong with server,try again";
+
+        }catch(Exception ex)
+        {
+            erroMessage = ex.Message;
+        }
+    }
+
+}

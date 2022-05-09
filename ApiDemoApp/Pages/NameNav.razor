@@ -1,0 +1,48 @@
+﻿@page "/NameNav"
+@using ApiDemoApp.Models
+@using System.Text.Json
+@inject IHttpClientFactory _client;
+<h3>Navigation by name</h3>
+<p><input type="text" placeholder="point name" value=@point required /></p>
+<p> <input type="button" value="提交" @onclick="StartNav" /></p>
+ <input type="button" value="取消" @onclick="CancelNav" />
+<p><label>@errorMessage</label></p>
+
+@code {
+    string? point;
+    string? errorMessage;
+    public async Task StartNav()
+    {
+        var client = _client.CreateClient("cmd");
+        try
+        {
+            var result = await client.PostAsJsonAsync<string>("nav_point", JsonSerializer.Serialize(new TargetName() { point = this.point }));
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                errorMessage = "Nav data correctly received";
+            else
+                errorMessage = "Something wrong with server";
+
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+     public async Task CancelNav()
+    {
+        var client = _client.CreateClient("cmd");
+        try
+        {
+            var result = await client.PostAsJsonAsync("cancel_goal", string.Empty);
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                errorMessage = "correctly cancel the naviagtion";
+            else
+                errorMessage = " something wrong with server,try again";
+
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+
+}
