@@ -1,0 +1,54 @@
+﻿@page "/localPlan"
+@using ApiDemoApp.Models
+@using System.Text.Json
+@inject IHttpClientFactory _client
+
+<h3>Local Navigate Plan</h3>
+
+@if(!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="h3">@errorMessage</div>
+}
+else if(lst == null)
+{
+    <div class="h3">Loading....</div>
+}
+else
+{
+    <table class="table table-striped" >
+        <thead>
+           <th> x_axis</th>
+           <th> y_axis</th>
+           <th> theta</th>
+        </thead>
+        <tbody>
+            @foreach(var item in lst)
+            {
+                <tr>
+                    <td>@item.x_axis</td>
+                    <td>@item.y_axis</td>
+                    <td>@item.theta</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    string? errorMessage;
+    List<Coordinace>? lst;
+
+    protected async override void OnInitialized()
+    {
+        var client = _client.CreateClient("nav");
+        try
+        {
+            lst = await client.GetFromJsonAsync<List<Coordinace>>("local_plan");
+            errorMessage = null;
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+}

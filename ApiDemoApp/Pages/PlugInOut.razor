@@ -1,0 +1,67 @@
+﻿@page "/plugin"
+@using ApiDemoApp.Models
+@inject IHttpClientFactory _client
+
+<h3>PlugInOut</h3>
+<p>
+    <input type="text" placeholder="server ip" value=@ip />
+</p>
+<p>
+    <input type="button" value="上电" @onclick="Plug_On" />
+    <input type="button" value="断电" @onclick="Plug_Out" />
+</p>
+<p>
+    <label>@errorMessage</label>
+</p>
+@code {
+    string? errorMessage;
+    string? ip;
+    EmPower? emPower;
+
+    public async Task Plug_On()
+    {
+        var client = _client.CreateClient();
+        try
+        {
+            emPower = new EmPower()
+            {
+                ip=this.ip,
+                lockStatus="lock"
+            };
+            string url = $"https://{emPower.ip}/cmd/{emPower.lockStatus} ";
+            var result = await client.PostAsJsonAsync<string>(url,"");
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                errorMessage = "Locked";
+            else
+                errorMessage = "something wrong with server";
+
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    public async Task Plug_Out()
+    {
+           var client = _client.CreateClient();
+        try
+        {
+            emPower = new EmPower()
+            {
+                ip=this.ip,
+                lockStatus="unlock"
+            };
+            string url = $"https://{emPower.ip}/cmd/{emPower.lockStatus} ";
+            var result = await client.PostAsJsonAsync<string>(url,"");
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                errorMessage = "Locked";
+            else
+                errorMessage = "something wrong with server";
+
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+}

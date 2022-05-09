@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("cmd", c => {
     c.BaseAddress = new Uri(builder.Configuration["cmd"]);
     });

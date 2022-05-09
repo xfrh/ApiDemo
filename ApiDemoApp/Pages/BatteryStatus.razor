@@ -1,0 +1,45 @@
+﻿@page "/batteryStatus"
+@using ApiDemoApp.Models
+@inject IHttpClientFactory _client
+<h3>Battery Status</h3>
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="h2">@errorMessage</div>
+}
+else if (battery == null)
+{
+    <div class="h2">Loading...</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <th>battery</th>
+            <th>chargeFlag</th>
+             <th>emergencyButton</th>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@battery.battery</td>
+                <td>@battery.chargeFlag</td>
+                <td>@battery.emergencyButton</td>
+            </tr>
+        </tbody>
+    </table>
+}
+@code {
+    string? errorMessage;
+    Battery? battery;
+    protected async override void OnInitialized()
+    {
+        var client = _client.CreateClient("nav");
+        try
+        {
+            battery = await client.GetFromJsonAsync<Battery>("base_encode");
+            errorMessage = null;
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

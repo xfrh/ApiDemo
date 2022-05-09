@@ -1,0 +1,57 @@
+﻿@page "/currentLoc"
+@using ApiDemoApp.Models
+@using System.Text.Json
+@inject IHttpClientFactory _client
+
+<h3>Local Navigate Plan</h3>
+
+@if(!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="h3">@errorMessage</div>
+}
+else if(coordinace == null)
+{
+    <div class="h3">Loading....</div>
+}
+else
+{
+    <table class="table table-striped" >
+        <thead>
+           <th> x_axis</th>
+           <th> y_axis</th>
+           <th> theta</th>
+        </thead>
+        <tbody>
+          
+                <tr>
+                    <td>@coordinace.x_axis</td>
+                    <td>@coordinace.y_axis</td>
+                    <td>@coordinace.theta</td>
+                </tr>
+          
+        </tbody>
+    </table>
+}
+
+@code {
+    string? errorMessage;
+    Coordinace? coordinace;
+
+    protected async override void OnInitialized()
+    {
+        var client = _client.CreateClient("nav");
+        try
+        {
+            var results = await client.GetFromJsonAsync<string>("pose");
+            if (results != null)
+            {
+                coordinace = JsonSerializer.Deserialize<Coordinace>(results);
+                errorMessage = null;
+            }
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+}

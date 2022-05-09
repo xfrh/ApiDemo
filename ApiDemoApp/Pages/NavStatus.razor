@@ -1,0 +1,47 @@
+﻿@page "/navStatus"
+@using ApiDemoApp.Models
+@using System.Text.Json
+@inject IHttpClientFactory _client
+
+
+<h3>NavStatus</h3>
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="h2">@errorMessage</div>
+}
+else if (moveStatus == null)
+{
+    <div class="h2">Loading....</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+           <th>status</th>
+          
+        </thead>
+        <tbody>
+            <tr>
+                <td>@moveStatus.status</td>
+            </tr>
+        </tbody>
+    </table>
+}
+
+@code {
+    string? errorMessage;
+    MoveStatus? moveStatus;
+    protected async override void OnInitialized()
+    {
+        var client = _client.CreateClient("nav");
+        try
+        {
+            moveStatus = await client.GetFromJsonAsync<MoveStatus>("status");
+            errorMessage = null;
+
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

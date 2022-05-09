@@ -1,0 +1,47 @@
+﻿@page "/moveAction"
+@using ApiDemoApp.Models
+@using System.Text.Json
+@inject IHttpClientFactory _client
+
+<h3>Move...</h3>
+<p>
+    <label>Vx:</label>
+    <input type="number" placeholder="直行速度" value=@vx required />
+
+</p>
+<p>
+    <label>Vth:</label>
+    <input type="number" placeholder="转动角度" value=@vth required />
+</p>
+
+<p>
+    <input type="button" value="提交" @onclick="StartCharge" />
+</p>
+<p><label>@errorMessage</label></p>
+
+@code {
+    string? errorMessage;
+    string? vx;
+    string? vth;
+
+    public async Task StartCharge()
+    {
+        var client = _client.CreateClient("cmd");
+        try
+        {
+            Move move = new Move() { vx =float.Parse(this.vx), vth =float.Parse(this.vth) };
+            var result = await client.PostAsJsonAsync<string>("speed", JsonSerializer.Serialize(move));
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+                errorMessage = "success send to charge";
+            else
+                errorMessage = "something wrong with server";
+
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+ 
+
+
+}
