@@ -1,8 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "BStbBSs3O8ULXHZcoS/Bju5LLBbaN0oozUBehorE0COqH3GUZsJk/TbZ4P5GYAsRf8weMVdiWDiLwjZVCt/d4A==",
+  "dgSpecHash": "wnMGJNXd7WMAhJsGuX4HwiOhAEn+VFwIA3olNGI7iu9MiNZVAYElEFsSx8yUamMW9zu4QlwsTzC7FSgo6nfQEw==",
   "success": true,
   "projectFilePath": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\ApiDemoApp.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\frank\\.nuget\\packages\\system.net.http.json\\6.0.0\\system.net.http.json.6.0.0.nupkg.sha512",
+    "C:\\Users\\frank\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\6.0.0\\system.runtime.compilerservices.unsafe.6.0.0.nupkg.sha512",
+    "C:\\Users\\frank\\.nuget\\packages\\system.text.encodings.web\\6.0.0\\system.text.encodings.web.6.0.0.nupkg.sha512",
+    "C:\\Users\\frank\\.nuget\\packages\\system.text.json\\6.0.0\\system.text.json.6.0.0.nupkg.sha512"
+  ],
   "logs": []
 }
