@@ -1,0 +1,7 @@
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Release\net6.0\publish\ApiDemoApp.exe
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Release\net6.0\publish\appsettings.Development.json
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Release\net6.0\publish\appsettings.json
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Release\net6.0\publish\ApiDemoApp.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Release\net6.0\publish\ApiDemoApp.deps.json
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Release\net6.0\publish\ApiDemoApp.runtimeconfig.json
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Release\net6.0\publish\ApiDemoApp.pdb

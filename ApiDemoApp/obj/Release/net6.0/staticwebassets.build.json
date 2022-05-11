@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "GKWkKu78E4XNVRa20elSfFXUk7jrkkQmzlwbskS3hvY=",
+  "Hash": "iznijyizP/muGtnMhiJKwEZf4Z/nuf8WLEk3ZybVxyU=",
   "Source": "ApiDemoApp",
   "BasePath": "_content/ApiDemoApp",
   "Mode": "Default",
@@ -17,10 +17,10 @@
   ],
   "Assets": [
     {
-      "Identity": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\bundle\\ApiDemoApp.styles.css",
+      "Identity": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Release\\net6.0\\scopedcss\\bundle\\ApiDemoApp.styles.css",
       "SourceId": "ApiDemoApp",
       "SourceType": "Computed",
-      "ContentRoot": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\bundle\\",
+      "ContentRoot": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Release\\net6.0\\scopedcss\\bundle\\",
       "BasePath": "_content/ApiDemoApp",
       "RelativePath": "ApiDemoApp.styles.css",
       "AssetKind": "All",
@@ -31,13 +31,13 @@
       "AssetTraitValue": "ApplicationBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\bundle\\ApiDemoApp.styles.css"
+      "OriginalItemSpec": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Release\\net6.0\\scopedcss\\bundle\\ApiDemoApp.styles.css"
     },
     {
-      "Identity": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\ApiDemoApp.bundle.scp.css",
+      "Identity": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Release\\net6.0\\scopedcss\\projectbundle\\ApiDemoApp.bundle.scp.css",
       "SourceId": "ApiDemoApp",
       "SourceType": "Computed",
-      "ContentRoot": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\",
+      "ContentRoot": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Release\\net6.0\\scopedcss\\projectbundle\\",
       "BasePath": "_content/ApiDemoApp",
       "RelativePath": "ApiDemoApp.bundle.scp.css",
       "AssetKind": "All",
@@ -48,7 +48,7 @@
       "AssetTraitValue": "ProjectBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\ApiDemoApp.bundle.scp.css"
+      "OriginalItemSpec": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Release\\net6.0\\scopedcss\\projectbundle\\ApiDemoApp.bundle.scp.css"
     },
     {
       "Identity": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\wwwroot\\css\\bootstrap\\bootstrap.min.css",

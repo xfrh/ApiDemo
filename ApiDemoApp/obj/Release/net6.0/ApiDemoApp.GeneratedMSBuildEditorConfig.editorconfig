@@ -1,0 +1,100 @@
+is_global = true
+build_property.TargetFramework = net6.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = ApiDemoApp
+build_property.RootNamespace = ApiDemoApp
+build_property.ProjectDir = D:\ApiDemo\ApiDemo\ApiDemoApp\
+build_property.RazorLangVersion = 6.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = D:\ApiDemo\ApiDemo\ApiDemoApp
+build_property._RazorSourceGeneratorDebug = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/BatteryStatus.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQmF0dGVyeVN0YXR1cy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/CordinanceNav.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29yZGluYW5jZU5hdi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/Counter.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ291bnRlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/CurrentLoc.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ3VycmVudExvYy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/FetchData.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmV0Y2hEYXRhLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/GlobalPlan.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcR2xvYmFsUGxhbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/LocalPlan.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9jYWxQbGFuLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/MoveAction.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTW92ZUFjdGlvbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/NameNav.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTmFtZU5hdi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/NaviCharge.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTmF2aUNoYXJnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/NavStatus.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTmF2U3RhdHVzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/PlugInOut.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGx1Z0luT3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Shared/SurveyPrompt.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFN1cnZleVByb21wdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-iwzlgqlz23
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-joqk9021r0
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRXJyb3IuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0xheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
