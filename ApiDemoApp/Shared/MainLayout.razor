@@ -1,5 +1,4 @@
 ﻿@inherits LayoutComponentBase
-
 <PageTitle>ApiDemoApp</PageTitle>
 
 <div class="page">
@@ -9,11 +8,21 @@
 
     <main>
         <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
+             <AuthorizeView>
+                 <Authorized>
+                     <form method="get" action="logout">
+                         <button type="submit" class="nav-link btn btn-link">Log out</button>
+                     </form>
+                 </Authorized>
+                 <NotAuthorized>
+                     <a href="login?redirectUri=/">Log in</a>
+                 </NotAuthorized>
+             </AuthorizeView>
+             <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+         </div> 
         <article class="content px-4">
             @Body
         </article>
     </main>
 </div>
+

@@ -1,13 +1,9 @@
 ﻿@page "/NameNav"
+@attribute [Authorize(Roles="Admin")]
 @using ApiDemoApp.Models
 @using System.Text.Json
 @inject IHttpClientFactory _client;
-@inject NavigationManager _navigationManager
-<AuthorizeView>
-    <NotAuthorized>
-         @if (true) { _navigationManager.NavigateTo("login"); }
-    </NotAuthorized>
-</AuthorizeView>
+
 <h3>Navigation by name</h3>
 <p><input type="text" placeholder="point name" @bind-value="@point" required /></p>
 <p> 

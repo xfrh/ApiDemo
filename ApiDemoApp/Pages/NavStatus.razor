@@ -1,13 +1,8 @@
 ﻿@page "/navStatus"
+@attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
 @using System.Text.Json
 @inject IHttpClientFactory _client
-@inject NavigationManager _navigationManager
-<AuthorizeView>
-    <NotAuthorized>
-         @if (true) { _navigationManager.NavigateTo("login"); }
-    </NotAuthorized>
-</AuthorizeView>
 
 <h3>NavStatus</h3>
 @if (!string.IsNullOrWhiteSpace(errorMessage))

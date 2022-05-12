@@ -1,5 +1,8 @@
 ﻿@page "/login"
+@using ApiDemoApp.Repositories
+@using ApiDemoApp.Services
 @inject NavigationManager _navigationManager
+@inject AuthenticationStateProvider _authState 
 <h3>Login to system</h3>
 
 <p>
@@ -17,8 +20,19 @@
 @code {
     string? email;
     string? password;
-    public void LogintoSystem()
+    
+    private System.Security.Claims.ClaimsPrincipal user;
+
+    public async Task LogintoSystem()
     {
+        var _user = UserRepository.Users.SingleOrDefault(u => u.EmailAddress == email && u.Password == password);
+
+        if (_user != null)
+        {
+          var en = Enum.Parse<TestUserType>(_user.Role);
+          var authState = await ((TestAuthenticationStateProvider)_authState).ChangeUser(en);
+          this.user = authState.User;
+        }
         _navigationManager.NavigateTo("/");
     }
 }

@@ -1,0 +1,15 @@
+﻿@page "/logout"
+@using ApiDemoApp.Services
+@inject NavigationManager _navigationManager
+@inject AuthenticationStateProvider _authState 
+
+
+@code {
+     private System.Security.Claims.ClaimsPrincipal user;
+    protected override async Task OnInitializedAsync()
+    {
+         var authState = await ((TestAuthenticationStateProvider)_authState).ChangeUser(TestUserType.None);
+         this.user = authState.User;
+         _navigationManager.NavigateTo("login");
+    }
+}

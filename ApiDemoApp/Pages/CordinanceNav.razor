@@ -1,13 +1,9 @@
 ﻿@page "/CoNav"
+@attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
 @using System.Text.Json
 @inject IHttpClientFactory _clientFactory;
-@inject NavigationManager _navigationManager
-<AuthorizeView>
-    <NotAuthorized>
-         @if (true) { _navigationManager.NavigateTo("login"); }
-    </NotAuthorized>
-</AuthorizeView>
+
 
 <h3>Send Coordinate Navigation</h3>
 

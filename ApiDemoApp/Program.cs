@@ -1,5 +1,7 @@
 using ApiDemoApp.Data;
-
+using ApiDemoApp.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +18,7 @@ builder.Services.AddHttpClient("nav", c =>
     c.BaseAddress = new Uri(builder.Configuration["nav"]);
 });
 
-
+builder.Services.AddSingleton<AuthenticationStateProvider, TestAuthenticationStateProvider>();
 
 var app = builder.Build();
 

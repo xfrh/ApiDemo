@@ -1,12 +1,8 @@
 ﻿@page "/batteryStatus"
+@attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
 @inject IHttpClientFactory _client
-@inject NavigationManager _navigationManager
-<AuthorizeView>
-    <NotAuthorized>
-         @if (true) { _navigationManager.NavigateTo("login"); }
-    </NotAuthorized>
-</AuthorizeView>
+
 <h3>Battery Status</h3>
 @if (!string.IsNullOrWhiteSpace(errorMessage))
 {
