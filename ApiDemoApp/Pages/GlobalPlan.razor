@@ -2,9 +2,13 @@
 @using ApiDemoApp.Models
 @using System.Text.Json
 @inject IHttpClientFactory _client
-
+@inject NavigationManager _navigationManager
+<AuthorizeView>
+    <NotAuthorized>
+         @if (true) { _navigationManager.NavigateTo("login"); }
+    </NotAuthorized>
+</AuthorizeView>
 <h2>Global Navigate Plan</h2>
-
 @if(!string.IsNullOrEmpty(errorMessage))
 {
     <div class="h3">@errorMessage</div>
@@ -33,6 +37,8 @@ else
         </tbody>
     </table>
 }
+
+
 
 @code {
     string errorMessage;

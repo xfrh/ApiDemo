@@ -1,6 +1,5 @@
 using ApiDemoApp.Data;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +16,8 @@ builder.Services.AddHttpClient("nav", c =>
     c.BaseAddress = new Uri(builder.Configuration["nav"]);
 });
 
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -32,6 +33,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

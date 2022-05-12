@@ -1,6 +1,12 @@
 ﻿@page "/plugin"
 @using ApiDemoApp.Models
 @inject IHttpClientFactory _client
+@inject NavigationManager _navigationManager
+<AuthorizeView>
+    <NotAuthorized>
+         @if (true) { _navigationManager.NavigateTo("login"); }
+    </NotAuthorized>
+</AuthorizeView>
 
 <h3>PlugInOut</h3>
 <p>

@@ -1,0 +1,24 @@
+﻿@page "/login"
+@inject NavigationManager _navigationManager
+<h3>Login to system</h3>
+
+<p>
+    <label for="user">user:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+    <input name="user" type="email" @bind-value="@email" required placeholder="enter the registed email" />
+</p>
+
+<p>
+    <label for="password">password:</label>
+    <input name="password" type="password" @bind-value="@password" required placeholder="enter the password"/>
+</p>
+<p>
+    <input type="button" value ="提交" @onclick="LogintoSystem" />
+</p> 
+@code {
+    string? email;
+    string? password;
+    public void LogintoSystem()
+    {
+        _navigationManager.NavigateTo("/");
+    }
+}
