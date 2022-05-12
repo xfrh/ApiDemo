@@ -7,3 +7,5 @@ After download and install the netcore then
 use command line,
 goto the directory of apidemo, 
 input command of "dotnet run" 
+
+
