@@ -2,11 +2,11 @@
 
 namespace ApiDemoApp.Models
 {
-    public class EmPower
+    public class SysConfig
     {
         [Required]
-        public string? ip { get; set; }
+        public string? TargetIp { get; set; }
         [Required]
-        public Boolean lockStatus { get; set; }
+        public string? TargetPort { get; set; }
     }
 }

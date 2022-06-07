@@ -1,0 +1,58 @@
+﻿@page "/admin"
+@using ApiDemoApp.Models
+@using Newtonsoft.Json;
+@using Newtonsoft.Json.Converters;
+@using System.Dynamic
+<h3>System Configuration</h3>
+
+<EditForm Model="@sysConfig" OnValidSubmit="HandleValidSubmit">
+      <DataAnnotationsValidator />  
+       <ValidationSummary />  
+       <div class="row content">  
+        <div class="col-md-2"><label for="targetIP">Target IP</label></div>  
+        <div class="col-md-3"><InputText id="targetIPd" @bind-Value="sysConfig.TargetIp" /></div>  
+    </div>  
+    <div class="row content">  
+        <div class="col-md-2"><label for="Port">Port</label></div>  
+        <div class="col-md-3"><InputText id="Port" @bind-Value="sysConfig.TargetPort" /></div>  
+    </div>  
+
+     <div class="row content"> 
+         <div class="col-md-2">
+          <button type="submit">Submit</button>  
+        </div>
+     </div>
+
+</EditForm>
+  <p>@errMsg</p>
+
+@code {
+    SysConfig sysConfig = new SysConfig();
+    string? errMsg;
+    private void HandleValidSubmit()  
+    {  
+        try
+        {
+            var appSettingsPath = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "appsettings.json");
+            var json = File.ReadAllText(appSettingsPath);
+
+            var jsonSettings = new JsonSerializerSettings();
+            jsonSettings.Converters.Add(new ExpandoObjectConverter());
+            jsonSettings.Converters.Add(new StringEnumConverter());
+
+            dynamic config = JsonConvert.DeserializeObject<ExpandoObject>(json, jsonSettings);
+
+            config.DebugEnabled = true;
+            config.cmd = "https://" + sysConfig.TargetIp + ":" + sysConfig.TargetPort + "/cmd/";
+            config.nav = "https://" + sysConfig.TargetIp + ":" + sysConfig.TargetPort + "/reeman/";
+            var newJson = JsonConvert.SerializeObject(config, Formatting.Indented, jsonSettings);
+
+            File.WriteAllText(appSettingsPath, newJson);
+            errMsg = "Config has updated!!";
+        } catch(Exception ex)
+        {
+            errMsg = ex.Message;
+        }
+       
+    }  
+}

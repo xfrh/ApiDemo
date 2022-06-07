@@ -25,3 +25,5 @@ D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\refint\ApiDemoApp.dll
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ApiDemoApp.pdb
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ApiDemoApp.genruntimeconfig.cache
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ref\ApiDemoApp.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Newtonsoft.Json.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ApiDemoApp.csproj.CopyComplete

@@ -4,36 +4,41 @@
 @inject IHttpClientFactory _client
 
 <h3>PlugInOut</h3>
-<p>
-    <input type="text" class="input-box"  placeholder="xxx.xxx.xxx.xx" @bind-value="@ip" autocomplete="off" />
-</p>
-<p>
-    <input type="button" value="上电" @onclick="Plug_On" />
-    <input type="button" value="断电" @onclick="Plug_Out" />
-</p>
-<p>
-    <label>@errorMessage</label>
-</p>
+<EditForm Model="@emPower" OnValidSubmit="HandleValidSubmit">
+      <DataAnnotationsValidator />  
+       <ValidationSummary />  
+       <div class="row content">  
+        <div class="col-md-2"><label for="targetIP">Target IP</label></div>  
+        <div class="col-md-3"><InputText id="targetIPd" @bind-Value="emPower.ip" /></div>  
+    </div>  
+    <div class="row content">  
+        <div class="col-md-2"><label for="Lock">Locked?</label></div>  
+        <div class="col-md-3"><InputCheckbox id="Lock" @bind-Value="emPower.lockStatus" /></div>  
+    </div>  
+
+     <div class="row content"> 
+         <div class="col-md-2">
+          <button type="submit">Submit</button>  
+        </div>
+     </div>
+
+</EditForm>
+  <p>@errorMessage</p>
 
 @code {
     string? errorMessage;
-    string? ip;
-    EmPower? emPower;
+    EmPower emPower =new EmPower();
 
-    public async Task Plug_On()
+    public async Task HandleValidSubmit()
     {
         var client = _client.CreateClient();
         try
         {
-            emPower = new EmPower()
-            {
-                ip=this.ip,
-                lockStatus="lock"
-            };
-            string url = $"https://{emPower.ip}/cmd/{emPower.lockStatus} ";
+            string isLocked = emPower.lockStatus ? "1" : "0";
+            string url = $"https://{emPower.ip}/cmd/{isLocked} ";
             var result = await client.PostAsJsonAsync<string>(url,"");
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
-                errorMessage = "Locked";
+                errorMessage = emPower.lockStatus? "Locked":"unLocked";
             else
                 errorMessage = "something wrong with server";
 
@@ -43,27 +48,6 @@
         }
     }
 
-    public async Task Plug_Out()
-    {
-           var client = _client.CreateClient();
-        try
-        {
-            emPower = new EmPower()
-            {
-                ip=this.ip,
-                lockStatus="unlock"
-            };
-            string url = $"https://{emPower.ip}/cmd/{emPower.lockStatus} ";
-            var result = await client.PostAsJsonAsync<string>(url,"");
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
-                errorMessage = "Locked";
-            else
-                errorMessage = "something wrong with server";
-
-        }catch(Exception ex)
-        {
-            errorMessage = ex.Message;
-        }
-    }
+   
 
 }
