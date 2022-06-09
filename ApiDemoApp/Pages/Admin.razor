@@ -17,6 +17,11 @@
         <div class="col-md-3"><InputText id="Port" @bind-Value="sysConfig.TargetPort" /></div>  
     </div>  
 
+        <div class="row content">  
+        <div class="col-md-2"><label for="SSL">Https</label></div>  
+        <div class="col-md-3"><InputCheckbox id="SSL" @bind-Value="sysConfig.SSL"/></div>  
+    </div>  
+
      <div class="row content"> 
          <div class="col-md-2">
           <button type="submit">Submit</button>  
@@ -41,10 +46,10 @@
             jsonSettings.Converters.Add(new StringEnumConverter());
 
             dynamic config = JsonConvert.DeserializeObject<ExpandoObject>(json, jsonSettings);
-
+            string potocal = sysConfig.SSL ? "https:" : "http:";
             config.DebugEnabled = true;
-            config.cmd = "https://" + sysConfig.TargetIp + ":" + sysConfig.TargetPort + "/cmd/";
-            config.nav = "https://" + sysConfig.TargetIp + ":" + sysConfig.TargetPort + "/reeman/";
+            config.cmd = potocal + "//" +  sysConfig.TargetIp + ":" + sysConfig.TargetPort + "/cmd/";
+            config.nav = potocal + "//" +  sysConfig.TargetIp + ":" + sysConfig.TargetPort + "/reeman/";
             var newJson = JsonConvert.SerializeObject(config, Formatting.Indented, jsonSettings);
 
             File.WriteAllText(appSettingsPath, newJson);

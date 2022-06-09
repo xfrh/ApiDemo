@@ -8,5 +8,7 @@ namespace ApiDemoApp.Models
         public string? TargetIp { get; set; }
         [Required]
         public string? TargetPort { get; set; }
+        public Boolean SSL { get; set; }
+
     }
 }
