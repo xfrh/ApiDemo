@@ -1,6 +1,7 @@
 ﻿@page "/plugin"
 @attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
+@using ApiDemoApp.Services
 @inject IHttpClientFactory _client
 
 <h3>PlugInOut</h3>
@@ -40,11 +41,17 @@
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 errorMessage = emPower.lockStatus? "Locked":"unLocked";
             else
+            {
                 errorMessage = "something wrong with server";
+                string errTxt  =  await result.Content.ReadAsStringAsync();
+                LogService.LogMessage(errTxt);
+            }
+
 
         }catch(Exception ex)
         {
             errorMessage = ex.Message;
+            LogService.LogMessage(ex.Message);
         }
     }
 

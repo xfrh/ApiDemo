@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles="Admin")]
 @using ApiDemoApp.Models
 @using System.Text.Json
+@using ApiDemoApp.Services
 @inject IHttpClientFactory _client;
 
 <h3>Navigation by name</h3>
@@ -31,7 +32,7 @@
             errorMessage = ex.Message;
         }
     }
-     public async Task CancelNav()
+    public async Task CancelNav()
     {
         var client = _client.CreateClient("cmd");
         try
@@ -40,7 +41,12 @@
             if (result.StatusCode == System.Net.HttpStatusCode.OK)
                 errorMessage = "correctly cancel the naviagtion";
             else
-                errorMessage = " something wrong with server,try again";
+            {
+                  errorMessage = " something wrong with server,try again";
+                  string errTxt  =  await result.Content.ReadAsStringAsync();
+                  LogService.LogMessage(errTxt);
+            }
+          
 
         }catch(Exception ex)
         {

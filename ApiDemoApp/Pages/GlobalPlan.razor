@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
 @using System.Text.Json
+@using ApiDemoApp.Services
 @inject IHttpClientFactory _client
 
 <h2>Global Navigate Plan</h2>
@@ -42,7 +43,7 @@ else
 
     protected  override async Task OnInitializedAsync()
     {
-       var client = _client.CreateClient("nav");
+        var client = _client.CreateClient("nav");
         try
         {
             lst = await client.GetFromJsonAsync<List<Coordinace>>("global_plan");
@@ -50,6 +51,8 @@ else
         }catch(Exception ex)
         {
             errorMessage = ex.Message;
+            LogService.LogMessage(ex.Message );
+
         }
     }
   

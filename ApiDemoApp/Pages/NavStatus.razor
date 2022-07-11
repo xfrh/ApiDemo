@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
 @using System.Text.Json
+@using ApiDemoApp.Services
 @inject IHttpClientFactory _client
 
 <h3>NavStatus</h3>
@@ -42,6 +43,7 @@ else
         }catch(Exception ex)
         {
             errorMessage = ex.Message;
+            LogService.LogMessage(ex.Message);
         }
     }
 }

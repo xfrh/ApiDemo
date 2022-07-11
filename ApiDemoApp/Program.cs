@@ -20,6 +20,17 @@ builder.Services.AddHttpClient("nav", c =>
 
 builder.Services.AddSingleton<AuthenticationStateProvider, TestAuthenticationStateProvider>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(b =>
+    {
+        b.WithOrigins("http://localhost:5173")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -35,7 +46,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseCors();
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

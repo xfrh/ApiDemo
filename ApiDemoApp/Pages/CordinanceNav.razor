@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
 @using System.Text.Json
+@using ApiDemoApp.Services
 @inject IHttpClientFactory _clientFactory;
 
 
@@ -48,11 +49,14 @@
             else
             {
                 erroMessage = "Something wrong with server";
+                string errTxt  =  await result.Content.ReadAsStringAsync();
+                LogService.LogMessage(errTxt);
             }
 
         }catch(Exception ex)
         {
             erroMessage = ex.Message;
+            LogService.LogMessage(ex.Message);
         }
     }
 

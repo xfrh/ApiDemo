@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles="Admin")]
 @using ApiDemoApp.Models
 @using System.Text.Json
+@using ApiDemoApp.Services
 @inject IHttpClientFactory _client
 
 <h3>Local Navigate Plan</h3>
@@ -49,6 +50,7 @@ else
         }catch(Exception ex)
         {
             errorMessage = ex.Message;
+            LogService.LogMessage(ex.Message);
         }
     }
 

@@ -2,9 +2,8 @@
 @attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
 @using System.Text.Json
-@implements IDisposable
+@using ApiDemoApp.Services
 @inject IHttpClientFactory _client
-
 
 <h3>Local Navigate Plan</h3>
 
@@ -43,31 +42,21 @@ else
     Coordinace? coordinace;
     System.Threading.Timer? timer;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        timer = new System.Threading.Timer(async _ => 
+        var client = _client.CreateClient("nav");
+        try
         {
-            var client = _client.CreateClient("nav");
-            try
-            {
-                coordinace = await client.GetFromJsonAsync<Coordinace>("pose");
-                errorMessage = null;
+            coordinace = await client.GetFromJsonAsync<Coordinace>("pose");
+            errorMessage = null;
 
-            }catch(Exception ex)
-            {
-                errorMessage = ex.Message;
-            }
-               
-           await InvokeAsync(StateHasChanged);
-        }, null, 0, 1000);
-        base.OnInitialized();
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+            LogService.LogMessage(ex.Message);
+        }
+    
     }
-
-  
-      public void Dispose()
-      {
-        timer?.Dispose();
-      }
 
  
 }

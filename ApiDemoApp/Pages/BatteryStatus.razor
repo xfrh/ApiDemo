@@ -1,6 +1,7 @@
 ﻿@page "/batteryStatus"
 @attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
+@using ApiDemoApp.Services
 @inject IHttpClientFactory _client
 
 <h3>Battery Status</h3>
@@ -32,7 +33,7 @@ else
 @code {
     string? errorMessage;
     Battery? battery;
-   protected  override async Task OnInitializedAsync()
+    protected  override async Task OnInitializedAsync()
     {
         var client = _client.CreateClient("nav");
         try
@@ -42,6 +43,7 @@ else
         }catch(Exception ex)
         {
             errorMessage = ex.Message;
+            LogService.LogMessage(ex.Message);
         }
     }
 }
