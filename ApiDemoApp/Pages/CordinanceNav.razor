@@ -37,8 +37,8 @@
         {
             Coordinace coordinace = new Coordinace()
                   {
-                    x_axis = this.x_axis,
-                    y_axis = this.y_axis,
+                    x = this.x_axis,
+                    y = this.y_axis,
                     theta =this.theta
                   };
             var result =await client.PostAsJsonAsync<string>("nav", JsonSerializer.Serialize(coordinace));

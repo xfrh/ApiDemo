@@ -249,11 +249,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\ApiDemoApp.csproj",
+      "projectUniqueName": "D:\\ApiDemo\\apiDemo\\ApiDemoApp\\ApiDemoApp.csproj",
       "projectName": "ApiDemoApp",
-      "projectPath": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\ApiDemoApp.csproj",
+      "projectPath": "D:\\ApiDemo\\apiDemo\\ApiDemoApp\\ApiDemoApp.csproj",
       "packagesPath": "C:\\Users\\frank\\.nuget\\packages\\",
-      "outputPath": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\",
+      "outputPath": "D:\\ApiDemo\\apiDemo\\ApiDemoApp\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\frank\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -309,7 +309,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.202\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.301\\RuntimeIdentifierGraph.json"
       }
     }
   }
