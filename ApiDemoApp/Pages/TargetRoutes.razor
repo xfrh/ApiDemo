@@ -1,0 +1,70 @@
+﻿@page "/routes"
+@using ApiDemoApp.Models
+@using System.Text.Json
+@using ApiDemoApp.Services
+@using Newtonsoft.Json
+@using System.Text.Json.Nodes
+@using Newtonsoft.Json.Linq
+
+@inject IHttpClientFactory _client
+
+<h3>巡航路线列表</h3>
+@if(!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="h3">@errorMessage</div>
+}
+else if(lst == null)
+{
+    <div class="h3">Loading....</div>
+}
+else
+{
+      <table class="table table-striped" >
+
+     @foreach (var key in lst.Keys)
+        {
+          int count = lst[key].Count;
+            <thead >
+             <th colspan="@count">@key</th>
+            </thead>
+        <tbody>
+                @foreach (var items in lst[key])
+                {
+                    <tr>
+                        <td>
+                            <table class="table table-striped">
+                                @foreach(var val in items)
+                                {
+                                    <tr>
+                                        <td>@val</td>
+                                    </tr>
+                                }
+                            </table>
+                        </td>
+                    </tr>
+                  
+                }
+        </tbody>
+        }
+    </table>
+}
+
+@code {
+    string? errorMessage;
+    Dictionary<string, List<List<double>>> lst;
+    protected override async Task OnInitializedAsync()
+    {
+        var client = _client.CreateClient("nav");
+        try
+        {
+            lst = await client.GetFromJsonAsync<Dictionary<string, List<List<double>>>>("navi_routes");
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            
+            errorMessage = ex.Message;
+            LogService.LogMessage(ex.Message);
+        }
+    }
+}

@@ -1,0 +1,90 @@
+﻿@page "/points"
+@using ApiDemoApp.Models
+@using System.Text.Json
+@using ApiDemoApp.Services
+@inject IHttpClientFactory _client
+
+<h3>目标点列表</h3>
+@if(!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="h3">@errorMessage</div>
+}
+else if(lst == null)
+{
+    <div class="h3">Loading....</div>
+}
+else
+{
+    <table class="table table-striped" >
+
+     @foreach (var key in lst.Keys)
+        {
+  
+        <tr>
+            <td>@key</td>
+             @foreach (var val in lst[key])
+                {
+                   <td>@val</td>
+  
+                }
+            <td>  <input type="button" value="导航到此位置" @onclick="()=> StartNav(key)" ></td>
+        </tr>
+        }
+    </table>
+}
+<span>@statusMessage</span>
+
+@code {
+    string? errorMessage;
+    string? statusMessage;
+    Dictionary<string,List<string>> lst;
+
+    public async Task StartNav(string key)
+    {
+        var client = _client.CreateClient("cmd");
+        try
+        {
+            List<string> ips =lst[key];
+            Coordinace coordinace = new Coordinace()
+                  {
+                    x = double.Parse(ips[0]),
+                    y =  double.Parse(ips[1]),
+                    theta =double.Parse(ips[2])
+                  };
+            var result =await client.PostAsJsonAsync<string>("nav", JsonSerializer.Serialize(coordinace));
+            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                statusMessage = "Nav data correctly received";
+            }
+            else
+            {
+                errorMessage = "Something wrong with server";
+                string errTxt  =  await result.Content.ReadAsStringAsync();
+                LogService.LogMessage(errTxt);
+            }
+
+        }catch(Exception ex)
+        {
+            errorMessage = ex.Message;
+            LogService.LogMessage(ex.Message);
+        }
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+         var client = _client.CreateClient("nav");
+         try
+        {
+             lst = await client.GetFromJsonAsync<Dictionary<string,List<string>>>("android_target");
+             errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            
+            errorMessage = ex.Message;
+            LogService.LogMessage(ex.Message);
+        }
+    }
+
+    
+}
