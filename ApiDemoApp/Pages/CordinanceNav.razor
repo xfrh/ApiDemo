@@ -3,16 +3,17 @@
 @using ApiDemoApp.Models
 @using System.Text.Json
 @using ApiDemoApp.Services
+@using System.Text
 @inject IHttpClientFactory _clientFactory;
 
 
 <h3>Send Coordinate Navigation</h3>
 
     <p>
-       <label>x 坐标:</label> <input type="number" @bind-value="@x_axis" placeholder="x 坐标" />
+       <label>x 坐标:</label> <input type="number" @bind-value="@x" placeholder="x 坐标" />
     </p>
     <p>
-       <label>y 坐标:</label> <input type ="number" @bind-value ="@y_axis"  placeholder="y 坐标"/>
+       <label>y 坐标:</label> <input type ="number" @bind-value ="@y"  placeholder="y 坐标"/>
     </p>
     <p>
       <label>&nbsp;&nbsp;弧度:</label>  <input type="number" @bind-value="@theta" placeholder="弧度" />
@@ -27,9 +28,9 @@
 
 @code {
     string? erroMessage;
-    float x_axis;
-    float y_axis;
-    float theta;
+    double x;
+    double y;
+    double theta;
     public async Task StartNav()
     {
         var client = _clientFactory.CreateClient("cmd");
@@ -37,20 +38,22 @@
         {
             Coordinace coordinace = new Coordinace()
                   {
-                    x = this.x_axis,
-                    y = this.y_axis,
+                    x = this.x,
+                    y = this.y,
                     theta =this.theta
                   };
-            var result =await client.PostAsJsonAsync<string>("nav", JsonSerializer.Serialize(coordinace));
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+         //   var result =await client.PostAsJsonAsync<string>("nav", JsonSerializer.Serialize(coordinace));
+            var stringPayload = JsonSerializer.Serialize(coordinace);
+            var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+            var httpResponse = await client.PostAsync("nav", httpContent);
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 erroMessage = "Nav data correctly received";
             }
             else
             {
-                erroMessage = "Something wrong with server";
-                string errTxt  =  await result.Content.ReadAsStringAsync();
-                LogService.LogMessage(errTxt);
+                erroMessage = await httpResponse.Content.ReadAsStringAsync();
+                LogService.LogMessage(erroMessage);
             }
 
         }catch(Exception ex)

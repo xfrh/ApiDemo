@@ -3,6 +3,7 @@
 @using ApiDemoApp.Models
 @using System.Text.Json
 @using ApiDemoApp.Services
+@using System.Text
 @inject IHttpClientFactory _client;
 
 <h3>Navigation by name</h3>
@@ -21,11 +22,21 @@
         var client = _client.CreateClient("cmd");
         try
         {
-            var result = await client.PostAsJsonAsync<string>("nav_point", JsonSerializer.Serialize(new TargetName() { point = this.point }));
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
+           // var result = await client.PostAsJsonAsync<string>("nav_point", JsonSerializer.Serialize(new TargetName() { point = this.point }));
+            
+            var stringPayload = JsonSerializer.Serialize(new TargetName() { point = this.point });
+            var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+            var httpResponse = await client.PostAsync("nav_point", httpContent);
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
                 errorMessage = "Nav data correctly received";
+            }
             else
-                errorMessage = "Something wrong with server";
+            {
+                errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                LogService.LogMessage(errorMessage);
+            }
+           
 
         }catch(Exception ex)
         {

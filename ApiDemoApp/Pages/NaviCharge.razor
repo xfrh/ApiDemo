@@ -2,6 +2,8 @@
 @attribute [Authorize(Roles="Admin")]
 @using ApiDemoApp.Models
 @using System.Text.Json
+@using System.Text
+@using ApiDemoApp.Services
 @inject IHttpClientFactory _client
 
 <h3>Nav to Charge</h3>
@@ -40,11 +42,21 @@
                     type = this.type,
                     point = this.point
                 };
-            var result = await client.PostAsJsonAsync<string>("charge", JsonSerializer.Serialize(charge));
-            if (result.StatusCode == System.Net.HttpStatusCode.OK)
-                errorMessage = "success send to charge";
+          //  var result = await client.PostAsJsonAsync<string>("charge", JsonSerializer.Serialize(charge));
+
+
+            var stringPayload = JsonSerializer.Serialize(charge);
+            var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+            var httpResponse = await client.PostAsync("charge", httpContent);
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                errorMessage = "Nav data correctly received";
+            }
             else
-                errorMessage = "something wrong with server";
+            {
+                errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                LogService.LogMessage(errorMessage);
+            }
 
         }catch(Exception ex)
         {

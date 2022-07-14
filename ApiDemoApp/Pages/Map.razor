@@ -2,6 +2,7 @@
 @using ApiDemoApp.Models
 @using System.Text.Json
 @using ApiDemoApp.Services
+
 @inject IHttpClientFactory _client
 
 <h3>当前地图</h3>
@@ -31,6 +32,7 @@ else
         {
                mapLayer = await client.GetFromJsonAsync<MapLayer>("map");
                mapName = await client.GetFromJsonAsync<MapName>("current_map");
+              
                errorMessage = null;
         }
         catch (Exception ex)

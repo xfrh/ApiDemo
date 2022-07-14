@@ -2,7 +2,7 @@
 {
     public class Move
     {
-        public float vx { get; set; }
-        public float vth { get; set; }
+        public double vx { get; set; }
+        public double vth { get; set; }
     }
 }
