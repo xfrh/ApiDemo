@@ -14,7 +14,16 @@ D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\ApiDemoApp.deps.json
 D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\ApiDemoApp.runtimeconfig.json
 D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\ApiDemoApp.dll
 D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\ApiDemoApp.pdb
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Microsoft.AspNetCore.Authorization.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Microsoft.AspNetCore.Components.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Microsoft.AspNetCore.Components.Forms.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Microsoft.AspNetCore.Components.Web.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Microsoft.AspNetCore.Metadata.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Microsoft.Extensions.Logging.Abstractions.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Microsoft.JSInterop.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\MudBlazor.dll
 D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Newtonsoft.Json.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\System.IO.Pipelines.dll
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\staticwebassets.build.json
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\staticwebassets.development.json
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\scopedcss\Shared\MainLayout.razor.rz.scp.css
@@ -27,3 +36,8 @@ D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\refint\ApiDemoApp.dll
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ApiDemoApp.pdb
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ApiDemoApp.genruntimeconfig.cache
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ref\ApiDemoApp.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\FisSst.BlazorMaps.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\SixLabors.Fonts.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\SixLabors.ImageSharp.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\SixLabors.ImageSharp.Drawing.dll
+D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\Blazored.LocalStorage.dll

@@ -1,0 +1,154 @@
+﻿@page "/usermanager"
+@attribute [Authorize(Roles="Admin")]
+@using ApiDemoApp.Models
+@using ApiDemoApp.Repositories
+@using ApiDemoApp.Services
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Reflection
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
+<MudPaper Height="400px" Width="100%" Elevation="0"  Class="pa-4 mt-16">
+     <MudContainer MaxWidth="MaxWidth.Medium" Elevation="0">
+        <MudPaper Height="400px" Width="100%" Square="true" Elevation="0" >
+            <MudGrid Class="pa-4 mt-16">
+               <MudItem xs="12" sm="5">
+            <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                  
+                    <MudTextField T="string" Label="用户名" @ref="@email" Required="true" RequiredError="必须输入注册邮箱!" HelperText="输入注册邮箱"
+                                  Validation="@(new EmailAddressAttribute() {ErrorMessage = "邮箱不正确"})"/>
+                    <MudTextField T="string" Label="密码" HelperText="输入6位登录密码" @ref="pwField1"
+                                  InputType="InputType.Password"
+                                  Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
+                                  RequiredError="必须输入密码!"/>
+                    <MudTextField T="string" @ref="pwField2"
+                                  Label="重复密码" HelperText="重复输入密码" InputType="InputType.Password"
+                                  Validation="@(new Func<string, string>(PasswordMatch))"/>
+                    <div class="d-flex">
+                        <MudRadioGroup T="string" Required="true" RequiredError="必须选择用户类型!" @bind-SelectedOption="@SelectedOption"  >
+                            <MudRadio Option="@("User")" >一般用户</MudRadio>
+                            <MudRadio Option="@("Administrator")">管理员</MudRadio>
+                        </MudRadioGroup>
+                    </div>
+                    <div class="d-flex align-center justify-space-between">
+                      
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!success)" Class="ml-auto" OnClick="@RegisterUser">注册</MudButton>
+                    </div>
+            </MudForm>
+            </MudItem>
+        <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4 mud-height-full" Elevation="0">
+                     
+      <MudTable Items="@lst"  Hover="true" Breakpoint="Breakpoint.Sm" @ref="mudTable" OnRowClick="RowClick"   T="User" Elevation="0">
+        <HeaderContent>
+        <MudTh>用户名</MudTh>
+        <MudTh>密码</MudTh>
+        <MudTh>类型</MudTh>
+      
+    </HeaderContent>
+    <RowTemplate>
+          <MudTd DataLabel="用户名">@context.EmailAddress</MudTd>
+          <MudTd DataLabel="密码">@context.Password</MudTd>
+          <MudTd DataLabel="类型">@context.Role</MudTd>
+      
+    </RowTemplate>
+      </MudTable>  
+  
+        </MudPaper>
+    </MudItem>
+   
+</MudGrid>
+        </MudPaper>
+    </MudContainer>
+</MudPaper>
+
+
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    bool success;
+    string[] errors = { };
+    public string SelectedOption { get; set; }
+    MudTextField<string> pwField1;
+    MudTextField<string> pwField2;
+    MudTextField<string> email;
+    List<User> lst = new List<User>();
+    MudForm form;
+    private MudTable<User> mudTable;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            lst = await localStorage.GetItemAsync <List<User>>("user_table");
+            if (lst == null)
+                lst = new List<User>();
+            StateHasChanged();
+        }
+       
+    }
+
+    private IEnumerable<string> PasswordStrength(string pw)
+    {
+        if (string.IsNullOrWhiteSpace(pw))
+        {
+            yield return "Password is required!";
+            yield break;
+        }
+        if (pw.Length < 6)
+            yield return "Password must be at least of length 6";
+
+    }
+
+    private string PasswordMatch(string arg)
+    {
+        if (pwField1.Value != arg)
+            return "Passwords don't match";
+        return null;
+    }
+
+    private async void  RegisterUser()
+    {
+        User model = new User()
+            {
+                EmailAddress = email.Text,
+                Password = pwField1.Text,
+                Role =SelectedOption
+    };
+        success = true;
+        StateHasChanged();
+        lst.Add(model);
+         email.Text="";
+        pwField1.Text = "";
+        pwField2.Text = "";
+       
+        await localStorage.SetItemAsync<List<User>>("user_table",lst);
+       
+
+    }
+
+    private async void RowClick(TableRowClickEventArgs<User> tableRowClickEventArgs)
+    {
+        User user = tableRowClickEventArgs.Item;
+        bool? result = await DialogService.ShowMessageBox(
+           "警告", 
+           "确实要删除该用户吗!", 
+           yesText:"Delete!", cancelText:"Cancel");
+        if (result != null)
+        {
+            var q = lst.FirstOrDefault(v => v.EmailAddress == user.EmailAddress);
+            if (q != null)
+            {
+                lst.Remove(q);
+                if (lst.Count == 0)
+                    await localStorage.RemoveItemAsync("user_table");
+                else
+                    await localStorage.SetItemAsync<List<User>>("user_table",lst);
+                StateHasChanged();
+            }
+           
+        }
+
+    }
+}

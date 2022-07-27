@@ -2,101 +2,89 @@
 @using ApiDemoApp.Models
 @using System.Text.Json
 @using ApiDemoApp.Services
-
 @using System.Text
-@inject IHttpClientFactory _client
-
-<h3>目标点列表</h3>
-@if(!string.IsNullOrEmpty(errorMessage))
-{
-    <div class="h3">@errorMessage</div>
-}
-else if(lst == null)
-{
-    <div class="h3">Loading....</div>
-}
-else
-{
-    <table class="table table-striped" >
-
-     @foreach (var key in lst.Keys)
-        {
-  
-        <tr>
-            <td>@key</td>
-             @foreach (var val in lst[key])
+@using System.Reflection
+@inject AppState appState
+@inject DataService dataService
+@implements IDisposable;
+    <MudTable Items="@lst"   Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info" >
+     
+      <HeaderContent>
+      @foreach (PropertyInfo p in typeof(TargetPointsModel).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
+      {
+         <MudTh>@p.Name</MudTh>
+       }
+     
+    </HeaderContent>
+        <RowTemplate>
+        @foreach (PropertyInfo p in typeof(TargetPointsModel).GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
+            {
+                if(p.GetValue(context).GetType() == typeof(System.String))
                 {
-                   <td>@val</td>
-  
+                <MudTd> @p.GetValue(context)</MudTd>
                 }
-            <td>  <input type="button" value="导航到此位置" @onclick="()=> StartNav(key)" ></td>
-        </tr>
-        }
-    </table>
-}
-<span>@statusMessage</span>
+                else
+                {
+                   Coordinace _p = p.GetValue(context) as Coordinace;
+                   string _f ="x:" + string.Format("{0:N2}%", _p.x) + " y:" + string.Format("{0:N2}%", _p.y) + " theta:" +  string.Format("{0:N2}%", _p.theta);
+                  <MudTd>
+                      <MudGrid>
+                       <MudItem xs="6">
+                         <MudPaper Class="d-flex align-center justify-center mud-width-full py-8" Elevation="0">@_f</MudPaper>
+                        </MudItem>
+                         <MudItem xs="6">
+                            <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">
+                                <MudIconButton Icon="@Icons.Filled.Navigation" aria-label="navigate" Color="Color.Primary" OnClick="async ()=>{ await StartNav(_p);}"/>
+                                </MudPaper>
+                        </MudItem>
+                      </MudGrid>
+                  </MudTd>
+               
+                }
+            }
+            
+</RowTemplate>
+    
+   </MudTable>
+
+
 
 @code {
-    string? errorMessage;
-    string? statusMessage;
-    Dictionary<string,List<string>> lst;
+    RegisterAGVFrom model;
+    private List<TargetPointsModel> lst = new List<TargetPointsModel>();
+    private bool _loading;
 
-    public async Task StartNav(string key)
+    public async Task StartNav(Coordinace key)
     {
-        var client = _client.CreateClient("cmd");
-        try
-        {
-            List<string> ips =lst[key];
-            Coordinace coordinace = new Coordinace()
-                  {
-                    x = double.Parse(ips[0]),
-                    y =  double.Parse(ips[1]),
-                    theta =double.Parse(ips[2])
-                  };
-            coordinace.theta = coordinace.theta * Math.PI / 180;
-            //var result =await client.PostAsJsonAsync<string>("nav", JsonSerializer.Serialize(coordinace));
-            //if (result.StatusCode == System.Net.HttpStatusCode.OK)
-            //{
-            //    statusMessage = "Nav data correctly received";
-            //}
-            //else
-            //{
-            //    statusMessage = await result.Content.ReadAsStringAsync();
-            //}
 
-           var stringPayload = JsonSerializer.Serialize(coordinace);
-            var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
-           var httpResponse = await client.PostAsync("nav", httpContent);
-             if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
-            {
-                statusMessage = "Nav data correctly received";
-            }
-            else
-            {
-                statusMessage = await httpResponse.Content.ReadAsStringAsync();
-            }
-        }catch(Exception ex)
+        string result = await dataService.StartNav(key);
+        if (string.IsNullOrEmpty(result))
         {
-            errorMessage = ex.Message;
-            LogService.LogMessage(ex.Message);
+            model = appState.SelectedModel;
+            appState.SetModel(model, ActionType.NAVIGATE);
         }
-
     }
     protected override async Task OnInitializedAsync()
     {
-         var client = _client.CreateClient("nav");
-         try
-        {
-             lst = await client.GetFromJsonAsync<Dictionary<string,List<string>>>("android_target");
-             errorMessage = null;
-        }
-        catch (Exception ex)
-        {
-            
-            errorMessage = ex.Message;
-            LogService.LogMessage(ex.Message);
-        }
+        // lst = await dataService.Target_Points();
+        appState.OnChange += ReceiveData;
+    }
+    public void Dispose()
+    {
+        appState.OnChange -= ReceiveData;
     }
 
-    
+    public async void ReceiveData()
+    {
+        if (appState.SelectedModel != null) {
+            if(appState.SelectedType == ActionType.SELECTED)
+            {
+                lst = await dataService.Target_Points();
+                StateHasChanged();
+            }
+
+        }
+
+
+    }
 }

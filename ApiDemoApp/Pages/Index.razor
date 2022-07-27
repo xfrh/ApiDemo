@@ -1,9 +1,67 @@
 ﻿@page "/"
+@using ApiDemoApp.Models
+@using ApiDemoApp.Services
+@inject AuthenticationStateProvider _authState 
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+<MudPaper Height="400px" Width="100%" Elevation="0"  Class="pa-4 mt-16">
+     <MudContainer MaxWidth="MaxWidth.Medium" >
+        <MudPaper Height="400px" Width="100%" Square="true" >
+            <MudText Align="Align.Center">@message</MudText>
+        </MudPaper>
+    </MudContainer>
+</MudPaper>
 
-<PageTitle>Index</PageTitle>
+@code{
+    string? message;
 
-<h1>Hello, world!</h1>
 
-Welcome to your new app.
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+        
+            User login_user = await localStorage.GetItemAsync<User>("login_user");
+           
+            if (login_user != null)
+            {
+                var en = Enum.Parse<TestUserType>(login_user.Role);
+                var authState = await ((TestAuthenticationStateProvider)_authState).ChangeUser(en);
+            }
+            else
+            {
+                await  AddSuperAdmin();
+            }
+
+            var authenticationState = await _authState.GetAuthenticationStateAsync();
+
+            if(authenticationState.User!=null && authenticationState.User.Identity.IsAuthenticated)
+            {
+                message = "选择要处理的机器人";
+            }
+            else
+            {
+                message = "如果尚未登录请先登陆后再操作";
+            }
+            StateHasChanged();
+        }
+    }
+
+     private async Task AddSuperAdmin()
+    {
+            List<User> lst = await localStorage.GetItemAsync < List<User>>("user_table"); 
+            if(lst==null || lst.Count == 0)
+            {
+                lst = new List<User>();
+                lst.Add(new User()
+                {
+                    EmailAddress="frank.admin@email.com",
+                    Password ="PassWord",
+                    Role="Admin"
+                });
+                await localStorage.SetItemAsync<List<User>>("user_table", lst);
+            }
+    }
+
+
+}

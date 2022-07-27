@@ -1,9 +1,11 @@
 ﻿@page "/login"
+@using ApiDemoApp.Models
 @using ApiDemoApp.Repositories
 @using ApiDemoApp.Services
 @inject NavigationManager _navigationManager
 @inject AuthenticationStateProvider _authState 
-<h3>Login to system</h3>
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@*<h3>Login to system</h3>
 
 <p>
     <label for="user">user:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
@@ -16,23 +18,59 @@
 </p>
 <p>
     <input type="button" value ="提交" @onclick="LogintoSystem" />
-</p> 
+</p> *@
+
+<MudPaper Height="400px" Width="100%" Elevation="0"  Class="pa-4 mt-16">
+     <MudContainer MaxWidth="MaxWidth.Medium" Elevation="0">
+        <MudPaper Height="400px" Width="100%" Square="true" Elevation="0" >
+           <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator/>
+        <MudCard  Class="pa-16 ma-2">
+            <MudCardContent>
+         
+                <MudTextField Label="用户名" HelperText="输入注册的邮箱" Class="mt-3"
+                              @bind-Value="model.EmailAddress" For="@(() => model.EmailAddress)" Variant="Variant.Outlined"/>
+              
+                
+                <MudTextField Label="密码" HelperText="输入密码" Class="mt-3"
+                              @bind-Value="model.Password" For="@(() => model.Password)" InputType="InputType.Password" Variant="Variant.Outlined"/>
+              
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">登录</MudButton>
+            </MudCardActions>
+        </MudCard>
+
+</EditForm>
+        </MudPaper>
+    </MudContainer>
+</MudPaper>
+
+
+
+
+
+
 @code {
-    string? email;
-    string? password;
-    
+
+    User model = new User();
+    bool success;
+
+
     private System.Security.Claims.ClaimsPrincipal user;
 
-    public async Task LogintoSystem()
+    public async void OnValidSubmit(EditContext context )
     {
-        var _user = UserRepository.Users.SingleOrDefault(u => u.EmailAddress == email && u.Password == password);
 
+        // var _user = UserRepository.Users.SingleOrDefault(u => u.EmailAddress == model.EmailAddress && u.Password == model.Password);
+        List<User> lst = await localStorage.GetItemAsync<List<User>>("user_table");
+        var _user = lst.SingleOrDefault(u => u.EmailAddress == model.EmailAddress && u.Password == model.Password);
         if (_user != null)
         {
-          var en = Enum.Parse<TestUserType>(_user.Role);
-          var authState = await ((TestAuthenticationStateProvider)_authState).ChangeUser(en);
-          this.user = authState.User;
+           await localStorage.SetItemAsync<User>("login_user", _user);
+           _navigationManager.NavigateTo("/",true);
         }
-        _navigationManager.NavigateTo("/");
+          
+        
     }
 }

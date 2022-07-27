@@ -1,0 +1,135 @@
+﻿@page "/addagv"
+@attribute [Authorize(Roles="Admin")]
+@using System.ComponentModel.DataAnnotations
+@using ApiDemoApp.Models
+@using System
+@using System.Text
+@using System.Reflection
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject ApiDemoApp.Services.AppState appState
+
+
+
+<MudGrid Class="pa-4 mt-16">
+    <MudItem xs="12" sm="7">
+        <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+         <DataAnnotationsValidator/>
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="AGV 编号" HelperText="小车编号" Class="mt-3"
+                              @bind-Value="model.name" For="@(() => model.name)"/>
+                <MudTextField Label="Type" HelperText="机器人类型" Class="mt-3"
+                              @bind-Value="model.type" For="@(() => model.type)"/>
+                <MudTextField Label="ip" HelperText="小车ip地址" Class="mt-3"
+                              @bind-Value="model.url" For="@(() => model.url)"/>
+              </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">注册</MudButton>
+            </MudCardActions>
+        </MudCard>
+        </EditForm>
+    </MudItem>
+    <MudItem xs="12" sm="5">
+        <MudPaper Class="pa-4 mud-height-full">
+          <MudTable Items="@lst"  @ref="mudTable"  Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info" OnRowClick="RowClick" T = "RegisterAGVFrom" >
+         <HeaderContent>
+            <MudTh>AGV编号</MudTh>
+            <MudTh>机器人类型</MudTh>
+            <MudTh>ip地址</MudTh>
+           
+        </HeaderContent>
+        <RowTemplate>
+        <MudTd DataLabel="AGV 编号">@context.name</MudTd>
+          <MudTd DataLabel="类型">@context.type</MudTd>
+          <MudTd DataLabel="ip地址">@context.url</MudTd>
+          
+        </RowTemplate>
+      </MudTable>
+        </MudPaper>
+    </MudItem>
+   
+</MudGrid>
+
+
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; }
+    RegisterAGVFrom model = new RegisterAGVFrom();
+    List<RegisterAGVFrom> lst = new List<RegisterAGVFrom>();
+    private bool _loading;
+    RegisterAGVFrom _selectedItem;
+    bool success;
+    private MudTable<RegisterAGVFrom> mudTable;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+              lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
+         if (lst == null)
+            lst = new List<RegisterAGVFrom>();
+            StateHasChanged();
+        }
+      
+    }
+
+    private async void OnValidSubmit(EditContext context)
+    {
+        success = true;
+        StateHasChanged();
+        lst.Add(model);
+        appState.SetModel(model, Services.ActionType.ADD);
+        model = new RegisterAGVFrom();
+        await localStorage.SetItemAsync<List<RegisterAGVFrom>>("agv_table", lst);
+       
+       
+
+    }
+
+    private async void RowClick(TableRowClickEventArgs<RegisterAGVFrom> tableRowClickEventArgs)
+    {
+        RegisterAGVFrom registerAGVFrom = tableRowClickEventArgs.Item;
+        bool? result = await DialogService.ShowMessageBox(
+           "警告", 
+           "确实要删除该小车吗!", 
+           yesText:"Delete!", cancelText:"Cancel");
+        if (result != null)
+        {
+            var q = lst.FirstOrDefault(v => v.name == registerAGVFrom.name && v.url == registerAGVFrom.url);
+            if (q != null)
+            {
+                lst.Remove(q);
+                appState.SetModel(q, Services.ActionType.DELETE);
+                if (lst.Count == 0)
+                    await localStorage.RemoveItemAsync("agv_table");
+                else
+                   await localStorage.SetItemAsync<List<RegisterAGVFrom>>("agv_table", lst);
+                StateHasChanged();
+            }
+           
+        }
+
+    }
+
+
+    //private async void OnSelectedItemChanged(MudListItem item)
+    //{
+    //    //_selectedItem = item;
+    //    //bool? result = await DialogService.ShowMessageBox(
+    //    //    "警告", 
+    //    //    "确实要删除该小车吗!", 
+    //    //    yesText:"Delete!", cancelText:"Cancel");
+    //    //if (result != null)
+    //    //{
+    //    //    var q = lst.FirstOrDefault(v => v.name == _selectedItem.Text && v.url == _selectedItem.Value.ToString());
+    //    //    if (q != null)
+    //    //    {
+    //    //        lst.Remove(q);
+    //    //        appState.SetModel(q, Services.ActionType.DELETE);
+    //    //    }
+           
+    //    //}
+    //     StateHasChanged();
+
+    //}
+}

@@ -1,0 +1,197 @@
+﻿@using ApiDemoApp.Models
+@using ApiDemoApp.Services
+@inject AppState appState
+@inject DataService dataService
+@inject ISnackbar Snackbar
+@implements IDisposable
+     <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
+    
+    @if (moveStatus != null)
+    {
+       switch (moveStatus.status)
+    {
+        case 0:
+            {
+                <MudTooltip Text="开始路线导航">
+                  <MudAvatar Color="Color.Secondary" Size="Size.Small">M</MudAvatar>
+                </MudTooltip>
+            }
+            break;
+           case 1:
+            {
+                  <MudTooltip Text="停止路线导航">
+                  <MudAvatar Color="Color.Warning" Size="Size.Small">M</MudAvatar>
+                </MudTooltip>
+            }
+            break;
+            case 2:
+            {
+                  <MudTooltip Text="重新开始路线导航">
+                  <MudAvatar Color="Color.Info" Size="Size.Small">M</MudAvatar>
+                </MudTooltip>
+            }
+            break;
+            case 3:
+            {
+                  <MudTooltip Text="路线导航结束">
+                  <MudAvatar Color="Color.Success" Size="Size.Small">M</MudAvatar>
+                </MudTooltip>
+            }
+            break;
+            case 4:
+            {
+                  <MudTooltip Text="路线错误">
+                  <MudAvatar Color="Color.Error" Size="Size.Small">M</MudAvatar>
+                    </MudTooltip>
+                }
+                break;
+            default:
+                {
+                     <MudTooltip Text="路线导航">
+                     <MudAvatar Color="Color.Primary" Size="Size.Small">M</MudAvatar>
+                    </MudTooltip>
+                }
+                break;
+        }
+       
+       
+    }
+         @if (battery != null)
+         {
+            switch (battery.chargeFlag)
+            {
+              case >=0 and <=8:
+              {
+                     <MudTooltip Text="充电中">
+                     <MudAvatar Color="Color.Warning" Size="Size.Small">B</MudAvatar>
+                    </MudTooltip>
+                }
+                break;
+               default:
+                {
+                     <MudTooltip Text="非充电">
+                     <MudAvatar Color="Color.Default" Size="Size.Small">B</MudAvatar>
+                    </MudTooltip>
+                }
+                break;
+        }
+            switch (battery.emergencyButton)
+            {
+                  case 0:
+                    {
+                         <MudTooltip Text="紧急开关按下">
+                        <MudAvatar Color="Color.Error" Size="Size.Small">E</MudAvatar>
+                        </MudTooltip>
+                    }
+                    break;
+                   default:
+                    {
+                          <MudTooltip Text="紧急开关">
+                        <MudAvatar Color="Color.Primary" Size="Size.Small">E</MudAvatar>
+                        </MudTooltip>
+                    }
+                    break;
+               } 
+                <MudText Typo="Typo.subtitle2" >电量:@battery.battery</MudText> 
+              }
+                @if (!string.IsNullOrEmpty(cur_Position))
+                {
+                    <MudText Typo="Typo.subtitle2" >@cur_Position</MudText> 
+                }
+                @if (@model != null)
+                {
+                     <MudText Typo="Typo.subtitle2" >机器人类型: @model.type</MudText> 
+                }
+     </MudPaper>
+
+@code {
+    RegisterAGVFrom model;
+    Battery battery;
+    MoveStatus moveStatus;
+    Coordinace coordinace;
+    string cur_Position{ get; set; }
+    bool isStop = false;
+    protected override void OnInitialized()
+    {
+        model = appState.SelectedModel;
+        appState.OnChange += ReceivedModel;
+
+    }
+
+
+    public void Dispose()
+    {
+        appState.OnChange -= ReceivedModel;
+
+    }
+
+    void ShowSanckBar(string message)
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomStart;
+        Snackbar.Add(message, Severity.Normal);
+    }
+
+    private async Task MyTask()
+    {
+        model = appState.SelectedModel;
+        moveStatus = await dataService.Cur_Status();
+        coordinace = await dataService.Cur_Position();
+        if(coordinace!=null)
+           cur_Position =  "位置: "  + string.Format("{0:N2}", coordinace.x) + " " + string.Format("{0:N2}", coordinace.y) +  " " + string.Format("{0:N2}", coordinace.theta);
+        battery = await dataService.Battery_Status();
+        StateHasChanged();
+
+    }
+
+    public async void ReceivedModel()
+    {
+        if (appState.SelectedModel != null)
+        {
+            if(appState.SelectedType == ActionType.SELECTED)
+            {
+                await MyTask();
+                ShowSanckBar(appState.SelectedModel.name + "开始工作");
+            }
+            else if(appState.SelectedType == ActionType.NAVIGATE)
+            {
+                ShowSanckBar("导航开始");
+                while(moveStatus.status==0)
+                {
+                    await MyTask();
+                    if (moveStatus.status == 3)
+                    {
+                        ShowSanckBar("导航完成");
+                        break;
+                    }
+                    else if (moveStatus.status == 4)
+                    {
+                        ShowSanckBar("导航失败");
+                        break;
+                    }
+                    if (isStop) break;
+                    System.Threading.Thread.Sleep(5000);
+                }
+            }
+            else if(appState.SelectedType == ActionType.STOP)
+            {
+                 isStop = true;
+                 ShowSanckBar("导航被取消");
+                await dataService.CancelNav();
+                await MyTask();
+                
+            }
+            else if(appState.SelectedType == ActionType.CHARGE)
+            {
+                string result=  await dataService.NavCharge();
+                if (string.IsNullOrEmpty(result))
+                {
+                    ShowSanckBar("导航到充电桩");
+                }
+            }
+
+        }
+      
+        
+    }
+}

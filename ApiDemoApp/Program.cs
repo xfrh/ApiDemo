@@ -1,7 +1,10 @@
 using ApiDemoApp.Data;
 using ApiDemoApp.Services;
+using Blazored.LocalStorage;
+using FisSst.BlazorMaps.DependencyInjection;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +12,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddSingleton<AppState>();
+builder.Services.AddSingleton<DataService>();
+builder.Services.AddSingleton<ImageService>();
+builder.Services.AddMudServices();
+builder.Services.AddBlazorLeafletMaps();
+builder.Services.AddBlazoredLocalStorage();
+
 builder.Services.AddHttpClient();
+
 builder.Services.AddHttpClient("cmd", c => {
     c.BaseAddress = new Uri(builder.Configuration["cmd"]);
     });
@@ -17,6 +28,7 @@ builder.Services.AddHttpClient("nav", c =>
 {
     c.BaseAddress = new Uri(builder.Configuration["nav"]);
 });
+
 
 builder.Services.AddSingleton<AuthenticationStateProvider, TestAuthenticationStateProvider>();
 

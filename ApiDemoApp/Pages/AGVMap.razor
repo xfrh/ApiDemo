@@ -1,0 +1,51 @@
+﻿@page "/map"
+@attribute [Authorize(Roles="Admin,User")]
+@using ApiDemoApp.Models
+@using ApiDemoApp.Services
+@using SixLabors.ImageSharp
+@using SixLabors.ImageSharp.Drawing
+@using SixLabors.ImageSharp.Processing
+@using SixLabors.ImageSharp.Drawing.Processing;
+@inject DataService dataService
+<MudPaper Height="782px" Width="848px" Elevation="0"  Class="pa-4 mt-16 ">
+     <MudContainer MaxWidth="MaxWidth.Medium" >
+       
+        <MudPaper Height="782px" Width="848px" Square="true"  >
+            <Map @ref="mapRef" MapOptions="@mapOptions"></Map>
+         </MudPaper>
+         
+
+    </MudContainer>
+</MudPaper>
+   
+<style>
+    #mapId {
+        height: 782px;
+       
+    }
+</style>
+
+@code {
+    private Map mapRef;
+
+    [Inject]
+    private IJSRuntime JsRuntime { get; init; }
+    private MapOptions mapOptions = new MapOptions()
+    {
+        DivId = "mapId",
+        Center = new LatLng(-83,12),
+        Zoom = 13,
+        UrlTileLayer= "Images//layout1.png",
+        SubOptions = new MapSubOptions()
+        {
+            TileSize = 512,
+            ZoomOffset = -1,
+            MaxZoom = 19,
+            Attribution="Frank's map"
+        }
+
+    };
+
+   
+
+}

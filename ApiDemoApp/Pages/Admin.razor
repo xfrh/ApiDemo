@@ -38,7 +38,7 @@
     {  
         try
         {
-            var appSettingsPath = Path.Combine(System.IO.Directory.GetCurrentDirectory(), "appsettings.json");
+            var appSettingsPath =System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "appsettings.json");
             var json = File.ReadAllText(appSettingsPath);
 
             var jsonSettings = new JsonSerializerSettings();

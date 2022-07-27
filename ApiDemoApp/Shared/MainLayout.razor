@@ -1,28 +1,159 @@
-﻿@inherits LayoutComponentBase
-<PageTitle>ApiDemoApp</PageTitle>
+﻿@using ApiDemoApp.Pages
+@using ApiDemoApp.Models
+@using ApiDemoApp.Services
+@inject AppState appState
+@implements IDisposable
+@inherits LayoutComponentBase
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject NavigationManager _navigationManager
+@inject AuthenticationStateProvider _authState 
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudThemeProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Transparent">
+        <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Disabled="@notLogin" />
+         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Navigation" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer" Disabled="@notLogin">导航</MudButton>
+         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.CancelScheduleSend" IconColor="Color.Inherit" Size="Size.Small" OnClick="@CancelNav" Disabled="@notLogin">取消导航</MudButton>
+         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.ElectricalServices" IconColor="Color.Inherit" Size="Size.Small" OnClick="@NavCharge" Disabled="@notLogin">导航充电</MudButton>
+         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.PowerInput" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin">对接充电桩</MudButton>
+         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.RepeatOne" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@ToggleRightDrawer">恢复导航</MudButton>
+          <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">用户管理</MudButton>
+          </MudPaper>
+          <MudSpacer/>
+         <AgvStatus />
 
-    <main>
-        <div class="top-row px-4">
-             <AuthorizeView>
-                 <Authorized>
-                     <form method="get" action="logout">
-                         <button type="submit" class="nav-link btn btn-link">Log out</button>
-                     </form>
-                 </Authorized>
-                 <NotAuthorized>
-                     <a href="login?redirectUri=/">Log in</a>
-                 </NotAuthorized>
-             </AuthorizeView>
-             <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-         </div> 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+        
+        @if (notLogin)
+        {
+               <MudTooltip Text="登录">
+            <MudIconButton Icon="@Icons.Filled.Login" Color="Color.Primary" Edge="Edge.End" aria-label="登录" Href="/login"/>
+            </MudTooltip>
+        }
+        else
+        {
+              <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
+                  <MudTooltip Text="@login_user.EmailAddress">
+                  <MudIcon Color="Color.Dark" Icon="@Icons.Filled.Person" Size="Size.Large" />
+                  </MudTooltip>
+             </MudAvatar>
+             <MudTooltip Text="退出登录">
+            <MudIconButton Icon="@Icons.Filled.Logout" Color="Color.Primary" Edge="Edge.End" aria-label="退出" Href="/logout"/>
+           </MudTooltip>
+        }
+       
+       
+
+    </MudAppBar>
+  
+ 
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="@DrawerVariant.Persistent">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6" Class="mt-1">AGV 列表</MudText>
+        </MudDrawerHeader>
+        <MudFab Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" Href="/addagv"/>
+       <AGVList/>
+    </MudDrawer>
+   
+    <MudDrawer @bind-Open="@openRight" Fixed="false" Anchor="Anchor.Right" Elevation="2" Variant="@DrawerVariant.Temporary" Height="800px">
+            <MudDrawerHeader>
+                <MudText Typo="Typo.h6">目标点导航</MudText>
+            </MudDrawerHeader>
+           <TargetPoints />
+        </MudDrawer>
+    
+  
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+@code {
+    bool _drawerOpen = false;
+    bool openRight = false;
+    bool notLogin = true;
+    RegisterAGVFrom model;
+    User login_user;
+    protected override void OnInitialized()
+    {
+
+        model = appState.SelectedModel;
+        appState.OnChange += ReceivedModel;
+
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            login_user = await localStorage.GetItemAsync<User>("login_user");
+            if (login_user != null)
+            {
+                var en = Enum.Parse<TestUserType>(login_user.Role);
+                var authState = await ((TestAuthenticationStateProvider)_authState).ChangeUser(en);
+            }
+            var authenticationState = await _authState.GetAuthenticationStateAsync();
+            if(authenticationState.User!=null && authenticationState.User.Identity.IsAuthenticated)
+            {
+                notLogin =false;
+                StateHasChanged();
+            }
+        }
+
+    }
+
+    public void Dispose()
+    {
+        appState.OnChange -= ReceivedModel;
+    }
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    void CancelNav()
+    {
+        if (appState.SelectedModel == null) return;
+        appState.SetModel(model, ActionType.STOP);
+
+    }
+
+    void NavCharge()
+    {
+        if (appState.SelectedModel == null) return;
+        appState.SetModel(model, ActionType.CHARGE);
+
+
+    }
+    void UserManager()
+    {
+        appState.SelectedModel = null;
+        _navigationManager.NavigateTo("/usermanager",true);
+    }
+
+    public void ReceivedModel()
+    {
+        if (appState.SelectedModel != null)
+        {
+            model=appState.SelectedModel;
+            if(appState.SelectedType == ActionType.NAVIGATE)
+            {
+                ToggleRightDrawer();
+                StateHasChanged();
+            }
+
+        }
+        
+        
+    }
+     void ToggleRightDrawer()
+    {
+       if (appState.SelectedModel == null) return;
+        openRight = !openRight;
+    }
+    
+}
 

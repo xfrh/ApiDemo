@@ -2,14 +2,20 @@
 @using ApiDemoApp.Services
 @inject NavigationManager _navigationManager
 @inject AuthenticationStateProvider _authState 
-
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject AppState appState
 
 @code {
-     private System.Security.Claims.ClaimsPrincipal user;
-    protected override async Task OnInitializedAsync()
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-         var authState = await ((TestAuthenticationStateProvider)_authState).ChangeUser(TestUserType.None);
-         this.user = authState.User;
-         _navigationManager.NavigateTo("login");
+        if (firstRender)
+        {
+            appState.SelectedModel = null;
+            await localStorage.RemoveItemAsync("login_user");
+            await ((TestAuthenticationStateProvider)_authState).ChangeUser(TestUserType.None);
+           _navigationManager.NavigateTo("/",true);
+        }
     }
 }
