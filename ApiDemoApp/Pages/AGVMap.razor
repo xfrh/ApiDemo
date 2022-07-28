@@ -2,50 +2,78 @@
 @attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
 @using ApiDemoApp.Services
+@using SixLabors.Fonts
 @using SixLabors.ImageSharp
 @using SixLabors.ImageSharp.Drawing
+@using SixLabors.ImageSharp.Formats.Png
 @using SixLabors.ImageSharp.Processing
 @using SixLabors.ImageSharp.Drawing.Processing;
 @inject DataService dataService
-<MudPaper Height="782px" Width="848px" Elevation="0"  Class="pa-4 mt-16 ">
-     <MudContainer MaxWidth="MaxWidth.Medium" >
-       
-        <MudPaper Height="782px" Width="848px" Square="true"  >
-            <Map @ref="mapRef" MapOptions="@mapOptions"></Map>
-         </MudPaper>
-         
-
+@inject AppState appState;
+  <MudPaper Height="400px" Width="100%" Elevation="0"  Class=" mt-16">
+     <MudContainer MaxWidth="MaxWidth.Medium"  >
+          <MudPaper Height="60px" Width="100%" Square="true" >
+            <MudFab StartIcon="@Icons.Filled.Bookmark" Label="显示设定的目标坐标" OnClick="async()=> {await ProcessMap();}" Disabled="@btnDisabled"/>
+        </MudPaper>
+        <MudPaper Height="400px" Width="100%" Square="true" Elevation="0" >
+                <MudImage Src="@mapLayer.image_url" Alt="导航目标示意图" Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height" />
+        </MudPaper>
     </MudContainer>
 </MudPaper>
-   
-<style>
-    #mapId {
-        height: 782px;
-       
-    }
-</style>
+
+
+
+
+
+ 
 
 @code {
-    private Map mapRef;
 
-    [Inject]
-    private IJSRuntime JsRuntime { get; init; }
-    private MapOptions mapOptions = new MapOptions()
+    MapLayer mapLayer=new MapLayer();
+    bool btnDisabled = true;
+    protected async override Task OnInitializedAsync()
     {
-        DivId = "mapId",
-        Center = new LatLng(-83,12),
-        Zoom = 13,
-        UrlTileLayer= "Images//layout1.png",
-        SubOptions = new MapSubOptions()
-        {
-            TileSize = 512,
-            ZoomOffset = -1,
-            MaxZoom = 19,
-            Attribution="Frank's map"
+        mapLayer = await dataService.Cur_Map();
+        btnDisabled = mapLayer.image_url == null;
+    }
+
+    private async Task ProcessMap()
+    {
+        List<TargetPointsModel> targetPointsModels = await dataService.Target_Points();
+        byte[] imageBytes = Convert.FromBase64String(mapLayer.image_url.Replace("data:image/png;base64,","").Trim());
+       // var font = SystemFonts.CreateFont("Arial", 12, FontStyle.Regular);
+                FontCollection collection = new();
+              FontFamily family = collection.Add(@"C:\Windows\Fonts\simhei.ttf");
+              Font font = family.CreateFont(12, FontStyle.Italic);
+            using(Image img = Image.Load(imageBytes))
+             {  
+            img.Mutate(x => x.Resize(mapLayer.width, mapLayer.height));
+            foreach(var item in targetPointsModels)
+            {
+                var px = (12.74 + item.coordinace.x) * 20;
+                var py = (18.32 - item.coordinace.y) * 20;
+
+                //  
+                IPath cur_position = new EllipsePolygon((float)px, (float)py, radius: 10.0f);
+                img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, cur_position));
+                img.Mutate(x=> x.DrawText(item.name, font, SixLabors.ImageSharp.Color.Black, new PointF((float)px-4, (float)py-5)));
+
+            }
+
+         
+
+            using (MemoryStream m = new MemoryStream())
+            {
+               
+                img.Save(m, new PngEncoder());
+                byte[] _imageBytes = m.ToArray();
+                mapLayer.image_url="data:image/png;base64," + Convert.ToBase64String(_imageBytes);
+                StateHasChanged();
+            }
+
         }
 
-    };
+    }
 
-   
 
 }

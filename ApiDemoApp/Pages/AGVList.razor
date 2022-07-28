@@ -3,7 +3,6 @@
 @using ApiDemoApp.Services
 @inject AppState appState
 @inject DataService dataService
-@inject ImageService imageService
 @inject NavigationManager _navigationManager
 @implements IDisposable;
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
@@ -65,39 +64,20 @@
 
     }
 
-    private async void CreateImage()
-    {
-        try
-        {
-            MapLayer mapLayer = await dataService.Cur_Map();
-            String filePath = System.IO.Path.Combine(Directory.GetCurrentDirectory(), "wwwroot\\Images\\layout1.png");
-            byte[] imageBytes = Convert.FromBase64String(mapLayer.image_url.Replace("data:image/png;base64,","").Trim());
-            imageService.CreateImage(imageBytes,mapLayer.width,mapLayer.height);
-            List<TargetPointsModel> targetPointsModels = await dataService.Target_Points();
-            imageService.SetTargetPoints(targetPointsModels);
-        
-            _navigationManager.NavigateTo("/map");
-
-        }
-        catch (Exception ex)
-        {
-
-            LogService.LogMessage("create image:" + ex.Message );
-        }
-    }
+  
 
 
     private void OnSelectedItemChanged(MudListItem item)
     {
         _selectedItem = item;
-        RegisterAGVFrom _model =new RegisterAGVFrom();
+         RegisterAGVFrom _model =new RegisterAGVFrom();
         _model.name = _selectedItem.Text;
         _model.url = _selectedItem.Value.ToString();
         _model.type = _selectedItem.Tag.ToString();
         dataService.Base_URL = "http://" + _model.url;
         appState.SetModel(_model,ActionType.SELECTED);
         StateHasChanged();
-        CreateImage();
+        _navigationManager.NavigateTo("/map");
     }
 
 }

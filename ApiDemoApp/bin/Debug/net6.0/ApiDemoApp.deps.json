@@ -9,9 +9,9 @@
       "ApiDemoApp/1.0.0": {
         "dependencies": {
           "Blazored.LocalStorage": "4.2.0",
-          "FisSst.BlazorMaps": "1.0.1",
           "MudBlazor": "6.0.12",
           "Newtonsoft.Json": "13.0.1",
+          "SixLabors.Fonts": "1.0.0-beta18",
           "SixLabors.ImageSharp": "2.1.3",
           "SixLabors.ImageSharp.Drawing": "1.0.0-beta15",
           "System.Net.Http.Json": "6.0.0"
@@ -28,18 +28,6 @@
           "lib/net6.0/Blazored.LocalStorage.dll": {
             "assemblyVersion": "1.0.0.0",
             "fileVersion": "1.0.0.0"
-          }
-        }
-      },
-      "FisSst.BlazorMaps/1.0.1": {
-        "dependencies": {
-          "Microsoft.AspNetCore.Components": "6.0.7",
-          "Microsoft.AspNetCore.Components.Web": "6.0.7"
-        },
-        "runtime": {
-          "lib/net5.0/FisSst.BlazorMaps.dll": {
-            "assemblyVersion": "1.0.1.0",
-            "fileVersion": "1.0.1.0"
           }
         }
       },
@@ -234,13 +222,6 @@
       "sha512": "sha512-cn6h0QrLw0AIwkx/LiogtBycBFHIeqT/ptXIt871/07qTCvIGXCQZpc1s38wpmTfYLvpha5+5yn6TvIaY9ziyg==",
       "path": "blazored.localstorage/4.2.0",
       "hashPath": "blazored.localstorage.4.2.0.nupkg.sha512"
-    },
-    "FisSst.BlazorMaps/1.0.1": {
-      "type": "package",
-      "serviceable": true,
-      "sha512": "sha512-djcpgAghyXB+zSz2kthbff+2EKUxIthWioPBD6f+RszzJ0Pz4hGNczFk2zUY2zzYfyGMzXJ2VyZbaK1+CPw9OA==",
-      "path": "fissst.blazormaps/1.0.1",
-      "hashPath": "fissst.blazormaps.1.0.1.nupkg.sha512"
     },
     "Microsoft.AspNetCore.Authorization/6.0.7": {
       "type": "package",

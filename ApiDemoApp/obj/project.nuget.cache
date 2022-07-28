@@ -1,11 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "WMboGj4AmC96yrFTwGMmbbKLWu7SZ+uO2MDRXVI5Kizcoh6/5BtN6gWd5pVCjD8/YZdAU7DDyAD4d995wljqqQ==",
+  "dgSpecHash": "gxEvdTMzQQZlqgHMqYk66vv0OSq6oJNtQRU5307QQEFL/leZklrO2l087bM2mIuv6dfmv8C+fDPr0D1UJBa5Mw==",
   "success": true,
   "projectFilePath": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\ApiDemoApp.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\frank\\.nuget\\packages\\blazored.localstorage\\4.2.0\\blazored.localstorage.4.2.0.nupkg.sha512",
-    "C:\\Users\\frank\\.nuget\\packages\\fissst.blazormaps\\1.0.1\\fissst.blazormaps.1.0.1.nupkg.sha512",
     "C:\\Users\\frank\\.nuget\\packages\\microsoft.aspnetcore.authorization\\6.0.7\\microsoft.aspnetcore.authorization.6.0.7.nupkg.sha512",
     "C:\\Users\\frank\\.nuget\\packages\\microsoft.aspnetcore.components\\6.0.7\\microsoft.aspnetcore.components.6.0.7.nupkg.sha512",
     "C:\\Users\\frank\\.nuget\\packages\\microsoft.aspnetcore.components.analyzers\\6.0.7\\microsoft.aspnetcore.components.analyzers.6.0.7.nupkg.sha512",

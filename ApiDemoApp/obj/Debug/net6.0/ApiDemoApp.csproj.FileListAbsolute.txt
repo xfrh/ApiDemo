@@ -36,7 +36,6 @@ D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\refint\ApiDemoApp.dll
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ApiDemoApp.pdb
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ApiDemoApp.genruntimeconfig.cache
 D:\ApiDemo\ApiDemo\ApiDemoApp\obj\Debug\net6.0\ref\ApiDemoApp.dll
-D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\FisSst.BlazorMaps.dll
 D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\SixLabors.Fonts.dll
 D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\SixLabors.ImageSharp.dll
 D:\ApiDemo\ApiDemo\ApiDemoApp\bin\Debug\net6.0\SixLabors.ImageSharp.Drawing.dll

@@ -44,10 +44,6 @@
               "target": "Package",
               "version": "[4.2.0, )"
             },
-            "FisSst.BlazorMaps": {
-              "target": "Package",
-              "version": "[1.0.1, )"
-            },
             "MudBlazor": {
               "target": "Package",
               "version": "[6.0.12, )"
@@ -55,6 +51,10 @@
             "Newtonsoft.Json": {
               "target": "Package",
               "version": "[13.0.1, )"
+            },
+            "SixLabors.Fonts": {
+              "target": "Package",
+              "version": "[1.0.0-beta18, )"
             },
             "SixLabors.ImageSharp": {
               "target": "Package",

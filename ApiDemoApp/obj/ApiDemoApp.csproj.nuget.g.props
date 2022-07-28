@@ -14,6 +14,5 @@
   </ItemGroup>
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <Import Project="$(NuGetPackageRoot)mudblazor\6.0.12\buildTransitive\MudBlazor.props" Condition="Exists('$(NuGetPackageRoot)mudblazor\6.0.12\buildTransitive\MudBlazor.props')" />
-    <Import Project="$(NuGetPackageRoot)fissst.blazormaps\1.0.1\buildTransitive\FisSst.BlazorMaps.props" Condition="Exists('$(NuGetPackageRoot)fissst.blazormaps\1.0.1\buildTransitive\FisSst.BlazorMaps.props')" />
   </ImportGroup>
 </Project>
