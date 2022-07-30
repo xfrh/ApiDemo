@@ -16,7 +16,7 @@
             <MudFab StartIcon="@Icons.Filled.Bookmark" Label="显示设定的目标坐标" OnClick="async()=> {await ProcessMap();}" Disabled="@btnDisabled"/>
         </MudPaper>
         <MudPaper Height="400px" Width="100%" Square="true" Elevation="0" >
-                <MudImage Src="@mapLayer.image_url" Alt="导航目标示意图" Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height" />
+                <MudImage Src="@mapLayer.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height" />
         </MudPaper>
     </MudContainer>
 </MudPaper>
@@ -50,17 +50,13 @@
             img.Mutate(x => x.Resize(mapLayer.width, mapLayer.height));
             foreach(var item in targetPointsModels)
             {
-                var px = (12.74 + item.coordinace.x) * 20;
-                var py = (18.32 - item.coordinace.y) * 20;
-
-                //  
+                var px = (12.74 + item.coordinace.x) * 20; //12.74
+                var py = (20.12 - item.coordinace.y) * 20; //20.12
                 IPath cur_position = new EllipsePolygon((float)px, (float)py, radius: 10.0f);
                 img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, cur_position));
                 img.Mutate(x=> x.DrawText(item.name, font, SixLabors.ImageSharp.Color.Black, new PointF((float)px-4, (float)py-5)));
 
             }
-
-         
 
             using (MemoryStream m = new MemoryStream())
             {
