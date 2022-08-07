@@ -31,6 +31,42 @@ namespace ApiDemoApp.Services
 
         }
 
+        public async Task<List<Coordinace>> Local_Plan()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/reeman/local_plan";
+                return await client.GetFromJsonAsync<List<Coordinace>>(call_url);
+               
+
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return await Task.FromResult<List<Coordinace>>(null);
+            }
+        }
+
+        public async Task<List<Coordinace>> Global_Plan()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/reeman/global_plan";
+                return await client.GetFromJsonAsync<List<Coordinace>>(call_url);
+
+
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return await Task.FromResult<List<Coordinace>>(null);
+            }
+        }
+
         public async Task<MoveStatus> Cur_Status()
         {
             //  var client = _client.CreateClient("nav");

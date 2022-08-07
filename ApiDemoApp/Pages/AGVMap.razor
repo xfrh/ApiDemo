@@ -10,6 +10,7 @@
 @using SixLabors.ImageSharp.Drawing.Processing;
 @inject DataService dataService
 @inject AppState appState;
+@implements IDisposable;
   <MudPaper Height="400px" Width="100%" Elevation="0"  Class=" mt-16">
      <MudContainer MaxWidth="MaxWidth.Medium"  >
           <MudPaper Height="60px" Width="100%" Square="true" >
@@ -22,31 +23,47 @@
 </MudPaper>
 
 
-
-
-
- 
-
 @code {
 
     MapLayer mapLayer=new MapLayer();
     bool btnDisabled = true;
+
     protected async override Task OnInitializedAsync()
     {
         mapLayer = await dataService.Cur_Map();
         btnDisabled = mapLayer.image_url == null;
+        appState.OnChange += ReceiveData;
+    }
+
+    public void Dispose()
+    {
+        appState.OnChange -= ReceiveData;
+    }
+
+    public void ReceiveData()
+    {
+        if(appState.SelectedModel != null) {
+
+            if (appState.SelectedType == ActionType.NAVIGATE)
+            {
+                DrawRoute();
+            }
+        }
+
+
     }
 
     private async Task ProcessMap()
     {
+        Coordinace coordinance = await dataService.Cur_Position();
         List<TargetPointsModel> targetPointsModels = await dataService.Target_Points();
         byte[] imageBytes = Convert.FromBase64String(mapLayer.image_url.Replace("data:image/png;base64,","").Trim());
-       // var font = SystemFonts.CreateFont("Arial", 12, FontStyle.Regular);
-                FontCollection collection = new();
-              FontFamily family = collection.Add(@"C:\Windows\Fonts\simhei.ttf");
-              Font font = family.CreateFont(12, FontStyle.Italic);
-            using(Image img = Image.Load(imageBytes))
-             {  
+        // var font = SystemFonts.CreateFont("Arial", 12, FontStyle.Regular);
+        FontCollection collection = new();
+        FontFamily family = collection.Add(@"C:\Windows\Fonts\simhei.ttf");
+        Font font = family.CreateFont(12, FontStyle.Italic);
+        using(Image img = Image.Load(imageBytes))
+        {  
             img.Mutate(x => x.Resize(mapLayer.width, mapLayer.height));
             foreach(var item in targetPointsModels)
             {
@@ -58,18 +75,47 @@
 
             }
 
-            using (MemoryStream m = new MemoryStream())
-            {
-               
-                img.Save(m, new PngEncoder());
-                byte[] _imageBytes = m.ToArray();
-                mapLayer.image_url="data:image/png;base64," + Convert.ToBase64String(_imageBytes);
-                StateHasChanged();
-            }
+            var px_xiaoche = (12.74 + coordinance.x) * 20;
+            var py_xiaoche = (20.12 - coordinance.y) * 20;
+            IPath cur_position_xiaoche = new EllipsePolygon((float)px_xiaoche, (float)py_xiaoche, radius: 10.0f);
+            img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Yellow, cur_position_xiaoche));
+            img.Mutate(x=> x.DrawText("车", font, SixLabors.ImageSharp.Color.Black, new PointF((float)px_xiaoche-4, (float)py_xiaoche-5)));
+            await SaveImg(img);
 
         }
 
     }
 
+    private async Task SaveImg(Image img)
+    {
+        using (MemoryStream m = new MemoryStream())
+        {
+
+            img.Save(m, new PngEncoder());
+            byte[] _imageBytes = m.ToArray();
+            mapLayer.image_url="data:image/png;base64," + Convert.ToBase64String(_imageBytes);
+            await this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private async Task DrawRoute()
+    {
+
+        var linePen = new Pen(SixLabors.ImageSharp.Color.Blue, 2);
+        var plans = await dataService.Local_Plan();
+        var points = new PointF[plans.Count];
+
+        for( int i =0; i<plans.Count; i++)
+        {
+            var px = (12.74 + plans[i].x) * 20; //12.74
+            var py = (20.12 - plans[i].y) * 20; //20.12
+            points[i] = new PointF((float)px, (float)py);
+        }
+        using(var img =Image.Load(mapLayer.image_url)){
+            img.Mutate(x => x.DrawLines(linePen, points));
+            await  SaveImg(img);
+        }
+       
+    }
 
 }

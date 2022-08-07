@@ -138,9 +138,9 @@
         moveStatus = await dataService.Cur_Status();
         coordinace = await dataService.Cur_Position();
         if(coordinace!=null)
-           cur_Position =  "位置: "  + string.Format("{0:N2}", coordinace.x) + " " + string.Format("{0:N2}", coordinace.y) +  " " + string.Format("{0:N2}", coordinace.theta);
+            cur_Position =  "位置: "  + string.Format("{0:N2}", coordinace.x) + " " + string.Format("{0:N2}", coordinace.y) +  " " + string.Format("{0:N2}", coordinace.theta);
         battery = await dataService.Battery_Status();
-        StateHasChanged();
+        await this.InvokeAsync(() => this.StateHasChanged());
 
     }
 

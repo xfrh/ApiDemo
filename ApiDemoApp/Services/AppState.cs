@@ -29,5 +29,6 @@ namespace ApiDemoApp.Services
         NAVIGATE=5,
         STOP=6,
         CHARGE=7,
+      
     }
 }

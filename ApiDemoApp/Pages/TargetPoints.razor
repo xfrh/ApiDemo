@@ -79,8 +79,8 @@
         if (appState.SelectedModel != null) {
             if(appState.SelectedType == ActionType.SELECTED)
             {
-                lst = await dataService.Target_Points();
-                StateHasChanged();
+               lst = await dataService.Target_Points();
+               await this.InvokeAsync(() => this.StateHasChanged());
             }
 
         }
