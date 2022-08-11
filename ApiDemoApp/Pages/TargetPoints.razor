@@ -62,6 +62,7 @@
         {
             model = appState.SelectedModel;
             appState.SetModel(model, ActionType.NAVIGATE);
+            await this.InvokeAsync(() => this.StateHasChanged());
         }
     }
     protected override async Task OnInitializedAsync()

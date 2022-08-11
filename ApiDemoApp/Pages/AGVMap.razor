@@ -46,7 +46,7 @@
 
             if (appState.SelectedType == ActionType.NAVIGATE)
             {
-                DrawRoute();
+           //     DrawRoute();
             }
         }
 
@@ -100,22 +100,20 @@
 
     private async Task DrawRoute()
     {
+            var linePen = new Pen(SixLabors.ImageSharp.Color.Blue, 2.5f);
+            var plans = await dataService.Global_Plan();
+            var points = new PointF[plans.Count];
 
-        var linePen = new Pen(SixLabors.ImageSharp.Color.Blue, 2);
-        var plans = await dataService.Local_Plan();
-        var points = new PointF[plans.Count];
-
-        for( int i =0; i<plans.Count; i++)
-        {
-            var px = (12.74 + plans[i].x) * 20; //12.74
-            var py = (20.12 - plans[i].y) * 20; //20.12
-            points[i] = new PointF((float)px, (float)py);
-        }
-        using(var img =Image.Load(mapLayer.image_url)){
-            img.Mutate(x => x.DrawLines(linePen, points));
-            await  SaveImg(img);
-        }
-       
+            for( int i =0; i<plans.Count; i++)
+            {
+                var px = (12.74 + plans[i].x) * 20; //12.74
+                var py = (20.12 - plans[i].y) * 20; //20.12
+                points[i] = new PointF((float)px, (float)py);
+            }
+            using(var img =Image.Load(mapLayer.image_url)){
+                img.Mutate(x => x.DrawLines(linePen, points));
+                await  SaveImg(img);
+            }
     }
 
 }

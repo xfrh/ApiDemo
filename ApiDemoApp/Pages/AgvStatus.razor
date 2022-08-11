@@ -110,7 +110,7 @@
     MoveStatus moveStatus;
     Coordinace coordinace;
     string cur_Position{ get; set; }
-    bool isStop = false;
+
     protected override void OnInitialized()
     {
         model = appState.SelectedModel;
@@ -148,50 +148,46 @@
     {
         if (appState.SelectedModel != null)
         {
-            if(appState.SelectedType == ActionType.SELECTED)
+            switch (appState.SelectedType)
             {
-                await MyTask();
-                ShowSanckBar(appState.SelectedModel.name + "开始工作");
-            }
-            else if(appState.SelectedType == ActionType.NAVIGATE)
-            {
-                ShowSanckBar("导航开始");
-                while(moveStatus.status==0)
-                {
+                case ActionType.SELECTED:
+                    ShowSanckBar(appState.SelectedModel.name + "开始工作");
+                    break;
+                case ActionType.NAVIGATE:
+                    ShowSanckBar("导航开始");
                     await MyTask();
-                    if (moveStatus.status == 3)
+                    while(moveStatus.status==0)
                     {
-                        ShowSanckBar("导航完成");
-                        break;
+                        await MyTask();
+                            if (moveStatus.status == 1)
+                            {
+                                ShowSanckBar("停止路线导航");
+                            }
+                            else if(moveStatus.status == 2)
+                            {
+                                ShowSanckBar("重新开始路线导航");
+                            }
+                            else if(moveStatus.status == 3)
+                            {
+                                ShowSanckBar("路线导航结束");
+                            }
+                            else if(moveStatus.status == 4)
+                            {
+                                ShowSanckBar("路线为空");
+                            }
+                     System.Threading.Thread.Sleep(5000);
                     }
-                    else if (moveStatus.status == 4)
-                    {
-                        ShowSanckBar("导航失败");
-                        break;
-                    }
-                    if (isStop) break;
-                    System.Threading.Thread.Sleep(5000);
-                }
-            }
-            else if(appState.SelectedType == ActionType.STOP)
-            {
-                 isStop = true;
-                 ShowSanckBar("导航被取消");
-                await dataService.CancelNav();
-                await MyTask();
-                
-            }
-            else if(appState.SelectedType == ActionType.CHARGE)
-            {
-                string result=  await dataService.NavCharge();
-                if (string.IsNullOrEmpty(result))
-                {
-                    ShowSanckBar("导航到充电桩");
-                }
-            }
+                    break;
+                case ActionType.CANCEL:
+                     await dataService.CancelNav();
+                     ShowSanckBar("导航被取消");
+                    break;
+                case ActionType.CHARGE:
+                     await dataService.NavCharge();
+                     ShowSanckBar("导航到充电桩");
+                    break;
 
+            }
         }
-      
-        
     }
 }

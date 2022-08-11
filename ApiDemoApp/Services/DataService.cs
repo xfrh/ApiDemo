@@ -7,8 +7,10 @@ namespace ApiDemoApp.Services
     public class DataService
     {
         private readonly IHttpClientFactory _client;
+    
         public DataService(IHttpClientFactory httpClientFactory) =>
          _client = httpClientFactory;
+       
         public string Base_URL { get; set; }
         public async Task<Coordinace> Cur_Position()
         {

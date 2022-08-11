@@ -117,16 +117,17 @@
     void CancelNav()
     {
         if (appState.SelectedModel == null) return;
-        appState.SetModel(model, ActionType.STOP);
+        appState.SetModel(model, ActionType.CANCEL);
+        StateHasChanged();
+
 
     }
 
     void NavCharge()
     {
         if (appState.SelectedModel == null) return;
-        appState.SetModel(model, ActionType.CHARGE);
-
-
+        appState.SetModel(model,ActionType.CHARGE);
+        StateHasChanged();
     }
     void UserManager()
     {

@@ -23,12 +23,11 @@ namespace ApiDemoApp.Services
     public enum ActionType
     {
         ADD =1,
-        UPDATE =2,
-        DELETE =3,
-        SELECTED=4,
-        NAVIGATE=5,
-        STOP=6,
-        CHARGE=7,
-      
+        UPDATE,
+        DELETE,
+        SELECTED,
+        NAVIGATE,
+        CANCEL,
+        CHARGE,
     }
 }
