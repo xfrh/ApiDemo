@@ -15,7 +15,7 @@
      <MudContainer MaxWidth="MaxWidth.Medium"  >
           <MudPaper Height="60px" Width="100%" Square="true" >
             <MudFab StartIcon="@Icons.Filled.Bookmark" Label="显示设定的目标坐标" OnClick="async()=> {await ProcessMap();}" Disabled="@btnDisabled"/>
-        </MudPaper>
+         </MudPaper>
         <MudPaper Height="400px" Width="100%" Square="true" Elevation="0" >
                 <MudImage Src="@mapLayer.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height" />
         </MudPaper>
@@ -27,7 +27,7 @@
 
     MapLayer mapLayer=new MapLayer();
     bool btnDisabled = true;
-
+    string imagePath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot//Images//layout1.png");
     protected async override Task OnInitializedAsync()
     {
         mapLayer = await dataService.Cur_Map();
@@ -38,51 +38,78 @@
     public void Dispose()
     {
         appState.OnChange -= ReceiveData;
+
     }
 
-    public void ReceiveData()
+    public async void ReceiveData()
     {
-        if(appState.SelectedModel != null) {
-
-            if (appState.SelectedType == ActionType.NAVIGATE)
-            {
-           //     DrawRoute();
-            }
+        switch (appState.SelectedType)
+        {
+            case ActionType.STOPPED:
+                await ProcessMap(true);
+                break;
         }
 
 
     }
 
-    private async Task ProcessMap()
+    private async Task ProcessMap(bool addingRoute =false)
     {
-        Coordinace coordinance = await dataService.Cur_Position();
-        List<TargetPointsModel> targetPointsModels = await dataService.Target_Points();
-        byte[] imageBytes = Convert.FromBase64String(mapLayer.image_url.Replace("data:image/png;base64,","").Trim());
-        // var font = SystemFonts.CreateFont("Arial", 12, FontStyle.Regular);
-        FontCollection collection = new();
-        FontFamily family = collection.Add(@"C:\Windows\Fonts\simhei.ttf");
-        Font font = family.CreateFont(12, FontStyle.Italic);
-        using(Image img = Image.Load(imageBytes))
-        {  
-            img.Mutate(x => x.Resize(mapLayer.width, mapLayer.height));
-            foreach(var item in targetPointsModels)
-            {
-                var px = (12.74 + item.coordinace.x) * 20; //12.74
-                var py = (20.12 - item.coordinace.y) * 20; //20.12
-                IPath cur_position = new EllipsePolygon((float)px, (float)py, radius: 10.0f);
-                img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, cur_position));
-                img.Mutate(x=> x.DrawText(item.name, font, SixLabors.ImageSharp.Color.Black, new PointF((float)px-4, (float)py-5)));
+        try
+        {
+            mapLayer = await dataService.Cur_Map(); 
+            Coordinace coordinance = await dataService.Cur_Position();
+            List<TargetPointsModel> targetPointsModels = await dataService.Target_Points();
+            byte[] imageBytes = Convert.FromBase64String(mapLayer.image_url.Replace("data:image/png;base64,","").Trim());
+            FontCollection collection = new();
+            FontFamily family = collection.Add(@"C:\Windows\Fonts\simhei.ttf");
+            Font font = family.CreateFont(12, FontStyle.Italic);
+            using(Image img = Image.Load(imageBytes))
+            {  
+                img.Mutate(x => x.Resize(mapLayer.width, mapLayer.height));
+                foreach(var item in targetPointsModels)
+                {
+                    var px = (12.74 + item.coordinace.x) * 20; //12.74
+                    var py = (20.12 - item.coordinace.y) * 20; //20.12
+                    IPath cur_position = new EllipsePolygon((float)px, (float)py, radius: 10.0f);
+                    img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, cur_position));
+                    img.Mutate(x=> x.DrawText(item.name, font, SixLabors.ImageSharp.Color.Black, new PointF((float)px-4, (float)py-5)));
 
-            }
+                }
 
-            var px_xiaoche = (12.74 + coordinance.x) * 20;
-            var py_xiaoche = (20.12 - coordinance.y) * 20;
-            IPath cur_position_xiaoche = new EllipsePolygon((float)px_xiaoche, (float)py_xiaoche, radius: 10.0f);
-            img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Yellow, cur_position_xiaoche));
-            img.Mutate(x=> x.DrawText("车", font, SixLabors.ImageSharp.Color.Black, new PointF((float)px_xiaoche-4, (float)py_xiaoche-5)));
+                var px_xiaoche = (12.74 + coordinance.x) * 20;
+                var py_xiaoche = (20.12 - coordinance.y) * 20;
+                IPath cur_position_xiaoche = new EllipsePolygon((float)px_xiaoche, (float)py_xiaoche, radius: 10.0f);
+                img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Yellow, cur_position_xiaoche));
+                img.Mutate(x=> x.DrawText("车", font, SixLabors.ImageSharp.Color.Black, new PointF((float)px_xiaoche-4, (float)py_xiaoche-5)));
+                if (addingRoute)
+                {
+                    var linePen = new Pen(SixLabors.ImageSharp.Color.Blue, 2.5f);
+                    var plans = appState.DrawCoordinates;
+                    var points = new PointF[plans.Count];
+
+                    for( int i =0; i<plans.Count; i++)
+                    {
+                        var px = (12.74 + plans[i].x) * 20; 
+                        var py = (20.12 - plans[i].y) * 20; 
+                        points[i] = new PointF((float)px, (float)py);
+                    }
+                     img.Mutate(x => x.DrawLines(linePen, points));
+                }
+
             await SaveImg(img);
 
+          }
+
+
+
         }
+        catch (Exception ex)
+        {
+
+            throw;
+        }
+
 
     }
 
@@ -97,23 +124,6 @@
             await this.InvokeAsync(() => this.StateHasChanged());
         }
     }
-
-    private async Task DrawRoute()
-    {
-            var linePen = new Pen(SixLabors.ImageSharp.Color.Blue, 2.5f);
-            var plans = await dataService.Global_Plan();
-            var points = new PointF[plans.Count];
-
-            for( int i =0; i<plans.Count; i++)
-            {
-                var px = (12.74 + plans[i].x) * 20; //12.74
-                var py = (20.12 - plans[i].y) * 20; //20.12
-                points[i] = new PointF((float)px, (float)py);
-            }
-            using(var img =Image.Load(mapLayer.image_url)){
-                img.Mutate(x => x.DrawLines(linePen, points));
-                await  SaveImg(img);
-            }
-    }
+  
 
 }

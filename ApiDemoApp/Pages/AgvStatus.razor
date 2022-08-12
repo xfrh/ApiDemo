@@ -155,10 +155,13 @@
                     break;
                 case ActionType.NAVIGATE:
                     ShowSanckBar("导航开始");
+                    appState.DrawCoordinates.Clear();
                     await MyTask();
                     while(moveStatus.status==0)
                     {
                         await MyTask();
+                        if(moveStatus.status != 0)
+                        {
                             if (moveStatus.status == 1)
                             {
                                 ShowSanckBar("停止路线导航");
@@ -175,6 +178,15 @@
                             {
                                 ShowSanckBar("路线为空");
                             }
+                            appState.SetModel(model,ActionType.STOPPED);
+                            await this.InvokeAsync(() => this.StateHasChanged());
+
+                        }
+                        else
+                        {
+                            appState.DrawCoordinates.Add(coordinace);
+                        }
+
                      System.Threading.Thread.Sleep(5000);
                     }
                     break;

@@ -137,7 +137,7 @@ namespace ApiDemoApp.Services
             }
         }
 
-        public async Task<string> StartNav(Coordinace coordinace)
+        public async Task<AGVStatus> StartNav(Coordinace coordinace)
         {
             //  var client = _client.CreateClient("cmd");
             var client = _client.CreateClient();
@@ -149,23 +149,25 @@ namespace ApiDemoApp.Services
                 var stringPayload = JsonSerializer.Serialize(coordinace);
                 var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
                 var httpResponse = await client.PostAsync(call_url, httpContent);
-                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    statusMessage = "";
-                }
-                else
-                {
-                    statusMessage = await httpResponse.Content.ReadAsStringAsync();
-                    LogService.LogMessage(statusMessage);
-                }
+                statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<AGVStatus>(statusMessage);
+                //if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                //{
+                //    statusMessage = "";
+                //}
+                //else
+                //{
+                //    statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                //    LogService.LogMessage(statusMessage);
+                //}
             }
             catch (Exception ex)
             {
 
                 LogService.LogMessage(ex.Message);
-                return ex.Message;
+                return null;
             }
-            return statusMessage;
+            
         }
 
         public async Task<string> CancelNav()
