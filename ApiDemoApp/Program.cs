@@ -1,4 +1,5 @@
 using ApiDemoApp.Data;
+using ApiDemoApp.Models;
 using ApiDemoApp.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -14,7 +15,6 @@ builder.Services.AddSingleton<AppState>();
 builder.Services.AddSingleton<DataService>();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
-
 builder.Services.AddHttpClient();
 
 builder.Services.AddHttpClient("cmd", c => {
@@ -27,6 +27,7 @@ builder.Services.AddHttpClient("nav", c =>
 
 
 builder.Services.AddSingleton<AuthenticationStateProvider, TestAuthenticationStateProvider>();
+//builder.Services.AddCors();
 
 builder.Services.AddCors(options =>
 {
@@ -37,7 +38,9 @@ builder.Services.AddCors(options =>
         .AllowAnyMethod()
         .AllowCredentials();
     });
+
 });
+
 
 var app = builder.Build();
 
@@ -52,10 +55,8 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
-
-app.UseRouting();
 app.UseCors();
-
+app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

@@ -58,7 +58,7 @@
     {
 
         var result = await dataService.StartNav(key);
-        if (result!= null && result.status=="success")
+        if (string.IsNullOrEmpty(result))
         {
             model = appState.SelectedModel;
             appState.SetModel(model, ActionType.NAVIGATE);

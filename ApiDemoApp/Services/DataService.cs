@@ -137,11 +137,11 @@ namespace ApiDemoApp.Services
             }
         }
 
-        public async Task<AGVStatus> StartNav(Coordinace coordinace)
+        public async Task<string> StartNav(Coordinace coordinace)
         {
             //  var client = _client.CreateClient("cmd");
             var client = _client.CreateClient();
-            string? statusMessage;
+            string statusMessage ="";
             try
             {
                 string call_url = Base_URL + "/cmd/nav";
@@ -150,24 +150,24 @@ namespace ApiDemoApp.Services
                 var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
                 var httpResponse = await client.PostAsync(call_url, httpContent);
                 statusMessage = await httpResponse.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<AGVStatus>(statusMessage);
-                //if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                //{
-                //    statusMessage = "";
-                //}
-                //else
-                //{
-                //    statusMessage = await httpResponse.Content.ReadAsStringAsync();
-                //    LogService.LogMessage(statusMessage);
-                //}
+
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    statusMessage = "";
+                }
+                else
+                {
+                    statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(statusMessage);
+                }
             }
             catch (Exception ex)
             {
 
                 LogService.LogMessage(ex.Message);
-                return null;
+                
             }
-            
+            return statusMessage;
         }
 
         public async Task<string> CancelNav()
