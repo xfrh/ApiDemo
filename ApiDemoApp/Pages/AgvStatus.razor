@@ -157,46 +157,35 @@
                     ShowSanckBar("导航开始");
                     appState.DrawCoordinates.Clear();
                     await MyTask();
-                    while(moveStatus.status==0)
-                    {
+                    while(moveStatus.status==1){
+                        appState.DrawCoordinates.Add(coordinace);
                         await MyTask();
-                        if(moveStatus.status != 0)
-                        {
-                            if (moveStatus.status == 1)
-                            {
-                                ShowSanckBar("停止路线导航");
-                            }
-                            else if(moveStatus.status == 2)
-                            {
-                                ShowSanckBar("重新开始路线导航");
-                            }
-                            else if(moveStatus.status == 3)
-                            {
-                                ShowSanckBar("路线导航结束");
-                            }
-                            else if(moveStatus.status == 4)
-                            {
-                                ShowSanckBar("路线为空");
-                            }
-                            appState.SetModel(model,ActionType.STOPPED);
-                            await this.InvokeAsync(() => this.StateHasChanged());
-
-                        }
-                        else
-                        {
-                            appState.DrawCoordinates.Add(coordinace);
-                        }
-
-                     System.Threading.Thread.Sleep(5000);
+                        Thread.Sleep(3000);
+                    }
+                    if(moveStatus.status!=1){
+                        if (moveStatus.status == 3)
+                            ShowSanckBar("导航完成");
+                        else if (moveStatus.status == 4)
+                            ShowSanckBar("导航失败");
+                        appState.SetModel(model, ActionType.STOPPED);
+                        await this.InvokeAsync(() => this.StateHasChanged());
                     }
                     break;
                 case ActionType.CANCEL:
-                     await dataService.CancelNav();
-                     ShowSanckBar("导航被取消");
+                    await dataService.CancelNav();
+                    ShowSanckBar("导航被取消");
                     break;
                 case ActionType.CHARGE:
-                     await dataService.NavCharge();
-                     ShowSanckBar("导航到充电桩");
+                    await dataService.NavCharge();
+                    ShowSanckBar("导航到充电桩");
+                    break;
+                case ActionType.PLUGIN:
+                    await dataService.BatteryEmpower();
+                    ShowSanckBar("设备充电");
+                    break;
+                case ActionType.PLUGOUT:
+                    await dataService.BatteryUnEmpower();
+                    ShowSanckBar("设备断开充电");
                     break;
 
             }

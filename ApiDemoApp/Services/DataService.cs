@@ -231,6 +231,60 @@ namespace ApiDemoApp.Services
             }
         }
 
+        public async Task<string> BatteryEmpower()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/lock";
+                var httpResponse = await client.PostAsync(call_url, null);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                   string errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(errorMessage);
+                    return errorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+
+        }
+
+        public async Task<string> BatteryUnEmpower()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/unlock";
+                var httpResponse = await client.PostAsync(call_url, null);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                    string errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(errorMessage);
+                    return errorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+
+        }
+
         public async Task<MapLayer> Cur_Map()
         {
             //  var client = _client.CreateClient("nav");

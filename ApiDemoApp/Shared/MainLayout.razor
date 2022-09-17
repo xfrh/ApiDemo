@@ -17,10 +17,8 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Disabled="@notLogin" />
          <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Navigation" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer" Disabled="@notLogin">导航</MudButton>
          <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.CancelScheduleSend" IconColor="Color.Inherit" Size="Size.Small" OnClick="@CancelNav" Disabled="@notLogin">取消导航</MudButton>
-         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.ElectricalServices" IconColor="Color.Inherit" Size="Size.Small" OnClick="@NavCharge" Disabled="@notLogin">导航充电</MudButton>
-         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.PowerInput" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin">对接充电桩</MudButton>
-         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.RepeatOne" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@ToggleRightDrawer">恢复导航</MudButton>
-          <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">用户管理</MudButton>
+         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.ElectricalServices" IconColor="Color.Inherit" Size="Size.Small" OnClick="@NavCharge" Disabled="@notLogin">对接充电桩</MudButton>
+         <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">用户管理</MudButton>
           </MudPaper>
           <MudSpacer/>
          <AgvStatus />
@@ -128,6 +126,20 @@
         appState.SetModel(model,ActionType.CHARGE);
         StateHasChanged();
     }
+
+    void PlugIn(){
+        if (appState.SelectedModel == null) return;
+        appState.SetModel(model, ActionType.PLUGIN);
+        StateHasChanged();
+
+    }
+
+    void PlugOut(){
+        if (appState.SelectedModel == null) return;
+        appState.SetModel(model, ActionType.PLUGOUT);
+        StateHasChanged();
+    }
+
     void UserManager()
     {
         appState.SelectedModel = null;

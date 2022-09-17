@@ -30,6 +30,8 @@ namespace ApiDemoApp.Services
         NAVIGATE,
         CANCEL,
         CHARGE,
+        PLUGIN,
+        PLUGOUT,
         STOPPED
     }
 }

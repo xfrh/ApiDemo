@@ -87,7 +87,7 @@
                     var linePen = new Pen(SixLabors.ImageSharp.Color.Blue, 2.5f);
                     var plans = appState.DrawCoordinates;
                     var points = new PointF[plans.Count];
-
+                                      
                     for( int i =0; i<plans.Count; i++)
                     {
                         var px = (12.74 + plans[i].x) * 20; 
@@ -95,6 +95,7 @@
                         points[i] = new PointF((float)px, (float)py);
                     }
                      img.Mutate(x => x.DrawLines(linePen, points));
+                   
                 }
 
             await SaveImg(img);
