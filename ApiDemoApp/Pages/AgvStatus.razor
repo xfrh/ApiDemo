@@ -114,6 +114,7 @@
     protected override void OnInitialized()
     {
         model = appState.SelectedModel;
+        moveStatus = new MoveStatus() { status = -2 };
         appState.OnChange += ReceivedModel;
 
     }
@@ -156,20 +157,27 @@
                 case ActionType.NAVIGATE:
                     ShowSanckBar("导航开始");
                     appState.DrawCoordinates.Clear();
-                    await MyTask();
+                    while(moveStatus.status!=1)
+                      await MyTask();
                     while(moveStatus.status==1){
                         appState.DrawCoordinates.Add(coordinace);
                         await MyTask();
-                        Thread.Sleep(3000);
-                    }
-                    if(moveStatus.status!=1){
-                        if (moveStatus.status == 3)
-                            ShowSanckBar("导航完成");
-                        else if (moveStatus.status == 4)
-                            ShowSanckBar("导航失败");
+                        if (moveStatus.status != 1)
+                        {
+                            if (moveStatus.status == 3)
+                                ShowSanckBar("导航完成");
+                            else if (moveStatus.status == 4)
+                                ShowSanckBar("导航失败");
+                            break;
+                        }
+                       
                         appState.SetModel(model, ActionType.STOPPED);
                         await this.InvokeAsync(() => this.StateHasChanged());
+                       
+                        Thread.Sleep(5000);
                     }
+                   
+                  
                     break;
                 case ActionType.CANCEL:
                     await dataService.CancelNav();
