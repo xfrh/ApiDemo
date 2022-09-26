@@ -5,103 +5,36 @@
 @inject ISnackbar Snackbar
 @implements IDisposable
      <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
-    
-    @if (moveStatus != null)
-    {
-       switch (moveStatus.status)
-    {
-        case 0:
-            {
-                <MudTooltip Text="开始路线导航">
-                  <MudAvatar Color="Color.Secondary" Size="Size.Small">M</MudAvatar>
-                </MudTooltip>
-            }
-            break;
-           case 1:
-            {
-                  <MudTooltip Text="停止路线导航">
-                  <MudAvatar Color="Color.Warning" Size="Size.Small">M</MudAvatar>
-                </MudTooltip>
-            }
-            break;
-            case 2:
-            {
-                  <MudTooltip Text="重新开始路线导航">
-                  <MudAvatar Color="Color.Info" Size="Size.Small">M</MudAvatar>
-                </MudTooltip>
-            }
-            break;
-            case 3:
-            {
-                  <MudTooltip Text="路线导航结束">
-                  <MudAvatar Color="Color.Success" Size="Size.Small">M</MudAvatar>
-                </MudTooltip>
-            }
-            break;
-            case 4:
-            {
-                  <MudTooltip Text="路线错误">
-                  <MudAvatar Color="Color.Error" Size="Size.Small">M</MudAvatar>
-                    </MudTooltip>
-                }
-                break;
-            default:
-                {
-                     <MudTooltip Text="路线导航">
-                     <MudAvatar Color="Color.Primary" Size="Size.Small">M</MudAvatar>
-                    </MudTooltip>
-                }
-                break;
-        }
-       
-       
+     @if(appState.SelectedModel== null){
+        <MudText Typo="Typo.subtitle2">还未选择机器人</MudText>
     }
-         @if (battery != null)
-         {
-            switch (battery.chargeFlag)
-            {
-              case >=0 and <=8:
-              {
-                     <MudTooltip Text="充电中">
-                     <MudAvatar Color="Color.Warning" Size="Size.Small">B</MudAvatar>
-                    </MudTooltip>
-                }
-                break;
-               default:
-                {
-                     <MudTooltip Text="非充电">
-                     <MudAvatar Color="Color.Default" Size="Size.Small">B</MudAvatar>
-                    </MudTooltip>
-                }
-                break;
-        }
-            switch (battery.emergencyButton)
-            {
-                  case 0:
-                    {
-                         <MudTooltip Text="紧急开关按下">
-                        <MudAvatar Color="Color.Error" Size="Size.Small">E</MudAvatar>
-                        </MudTooltip>
-                    }
-                    break;
-                   default:
-                    {
-                          <MudTooltip Text="紧急开关">
-                        <MudAvatar Color="Color.Primary" Size="Size.Small">E</MudAvatar>
-                        </MudTooltip>
-                    }
-                    break;
-               } 
-                <MudText Typo="Typo.subtitle2" >电量:@battery.battery</MudText> 
-              }
-                @if (!string.IsNullOrEmpty(cur_Position))
-                {
-                    <MudText Typo="Typo.subtitle2" >@cur_Position</MudText> 
-                }
-                @if (@model != null)
-                {
-                     <MudText Typo="Typo.subtitle2" >机器人类型: @model.type</MudText> 
-                }
+    else{
+
+        
+        <MudTooltip Text=@cur_Battery>
+          <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                <MudIcon Color="Color.Dark" Icon="@Icons.Filled.BatteryAlert" Size="Size.Small" />
+                </MudAvatar>
+        </MudTooltip>
+        <MudTooltip Text=@cur_Speed>
+            <MudAvatar Color="Color.Secondary" Variant="Variant.Filled">
+                <MudIcon Color="Color.Dark" Icon="@Icons.Filled.Speed" Size="Size.Small" />
+        </MudAvatar>
+       </MudTooltip>
+        <MudTooltip Text=@cur_Position>
+            <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                <MudIcon Color="Color.Dark" Icon="@Icons.Filled.LocationOn" Size="Size.Small" />
+        </MudAvatar>
+       </MudTooltip>
+
+        <MudTooltip Text=@model.type>
+            <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled">
+                <MudIcon Color="Color.Dark" Icon="@Icons.Filled.Info" Size="Size.Small" />
+            </MudAvatar>
+        </MudTooltip>
+         
+    }
+  
      </MudPaper>
 
 @code {
@@ -109,14 +42,17 @@
     Battery battery;
     MoveStatus moveStatus;
     Coordinace coordinace;
-    string cur_Position{ get; set; }
+    AGVSpeed aGVSpeed;
+    string cur_Position;
+    string cur_Battery;
+    string cur_Speed;
 
     protected override void OnInitialized()
     {
         model = appState.SelectedModel;
-        moveStatus = new MoveStatus() { status = -2 };
         appState.OnChange += ReceivedModel;
-
+        if (model != null)
+            MyTask();
     }
 
 
@@ -138,11 +74,56 @@
         model = appState.SelectedModel;
         moveStatus = await dataService.Cur_Status();
         coordinace = await dataService.Cur_Position();
-        if(coordinace!=null)
-            cur_Position =  "位置: "  + string.Format("{0:N2}", coordinace.x) + " " + string.Format("{0:N2}", coordinace.y) +  " " + string.Format("{0:N2}", coordinace.theta);
         battery = await dataService.Battery_Status();
+        aGVSpeed = await dataService.Speed();
+
+        if(coordinace!=null)
+            cur_Position =  "位置坐标: "  + string.Format("{0:N2}", coordinace.x) + " " + string.Format("{0:N2}", coordinace.y) +  " " + string.Format("{0:N2}", coordinace.theta);
+        if (battery != null){
+            cur_Battery = "电量:" + battery.battery.ToString() + "%,";
+            switch(battery.chargeFlag){
+                case 2:
+                    cur_Battery += "正在充电桩充电";
+                    break;
+                case 3:
+                    cur_Battery += "适配器充电";
+                    break;
+                case 8:
+                    cur_Battery += "正在对接充电桩";
+                    break;
+                default:
+                    cur_Battery += "非充电";
+                    break;
+            }
+            switch(battery.emergencyButton){
+                case 0:
+                    cur_Battery += ",急停开关按下";
+                    break;
+                case 1:
+                    cur_Battery +=",急停开关谈起";
+                    break;
+            }
+
+        }
+        if(aGVSpeed!=null){
+            cur_Speed = "线速度:" + aGVSpeed.vx.ToString() + ",角速度:" + aGVSpeed.vth;
+        }
+
+
         await this.InvokeAsync(() => this.StateHasChanged());
 
+    }
+
+    public bool isBatteryInCharge(){
+        return battery.chargeFlag == 2;
+    }
+
+    public bool isStopBtnPressed(){
+        return battery.emergencyButton == 0;
+    }
+
+    public bool isNavigate(){
+        return moveStatus.status == 1;
     }
 
     public async void ReceivedModel()
@@ -153,47 +134,107 @@
             {
                 case ActionType.SELECTED:
                     ShowSanckBar(appState.SelectedModel.name + "开始工作");
+                    await MyTask();
+                    await this.InvokeAsync(() => this.StateHasChanged());
                     break;
                 case ActionType.NAVIGATE:
+                    await MyTask();
+                    if(isBatteryInCharge()){
+
+                        ShowSanckBar("正在充电中");
+                        return;
+                    }
+                    if(isStopBtnPressed()){
+                        ShowSanckBar("急停开关打开了");
+                        return;
+                    }
+                    await dataService.StartNav(appState.Nav_Coordiance);
                     ShowSanckBar("导航开始");
                     appState.DrawCoordinates.Clear();
                     while(moveStatus.status!=1)
-                      await MyTask();
-                    while(moveStatus.status==1){
+                        await MyTask();
+                    while (moveStatus.status == 1)
+                    {
                         appState.DrawCoordinates.Add(coordinace);
                         await MyTask();
                         if (moveStatus.status != 1)
                         {
-                            if (moveStatus.status == 3)
+                            if (moveStatus.status == 3){
                                 ShowSanckBar("导航完成");
-                            else if (moveStatus.status == 4)
-                                ShowSanckBar("导航失败");
+                            }
+                            else if (moveStatus.status == 4){
+                                ShowSanckBar("导航被取消");
+
+                            }
+
                             break;
                         }
-                       
+
                         appState.SetModel(model, ActionType.STOPPED);
                         await this.InvokeAsync(() => this.StateHasChanged());
-                       
-                        Thread.Sleep(5000);
+
+                        Thread.Sleep(1000);
                     }
-                   
-                  
+
+
                     break;
                 case ActionType.CANCEL:
                     await dataService.CancelNav();
                     ShowSanckBar("导航被取消");
                     break;
                 case ActionType.CHARGE:
+                    await MyTask();
+                    if (isStopBtnPressed())
+                    {
+                        ShowSanckBar("急停开关打开了");
+                        return;
+                    }
                     await dataService.NavCharge();
-                    ShowSanckBar("导航到充电桩");
+                    ShowSanckBar("正在去充电");
+                    appState.DrawCoordinates.Clear();
+                    while(battery.chargeFlag!=2){
+                        appState.DrawCoordinates.Add(coordinace);
+                        await MyTask();
+                        if(battery.chargeFlag==8){
+                            ShowSanckBar("正在对接充电桩");
+                        }
+                        else if(battery.chargeFlag==2){
+                            ShowSanckBar("开始充电");
+                        }
+                        if(moveStatus.status==1){
+                            appState.SetModel(model, ActionType.STOPPED);
+                            await this.InvokeAsync(() => this.StateHasChanged());
+
+                        }
+                        else if (moveStatus.status == 4)
+                        {
+                            ShowSanckBar("充电被取消");
+                            break;
+                        }
+
+                        Thread.Sleep(1000);
+
+                    }
                     break;
-                case ActionType.PLUGIN:
-                    await dataService.BatteryEmpower();
-                    ShowSanckBar("设备充电");
-                    break;
-                case ActionType.PLUGOUT:
-                    await dataService.BatteryUnEmpower();
-                    ShowSanckBar("设备断开充电");
+                case ActionType.MANUL:
+                    await MyTask();
+                    if (isBatteryInCharge())
+                    {
+
+                        ShowSanckBar("正在充电中");
+                        return;
+                    }
+                    if (isStopBtnPressed())
+                    {
+                        ShowSanckBar("急停开关打开了");
+                        return;
+                    }
+                    await dataService.ManuMoveCar(appState.SelectedAGVSpeed);
+                    appState.DrawCoordinates.Add(coordinace);
+                    if(appState.DrawCoordinates.Count>=2){
+                        appState.SetModel(model, ActionType.STOPPED);
+                        await this.InvokeAsync(() => this.StateHasChanged());
+                    }
                     break;
 
             }

@@ -14,6 +14,6 @@ namespace ApiDemoApp.Models
         [Required]
         public string url { get; set; }
 
-     
+
     }
 }

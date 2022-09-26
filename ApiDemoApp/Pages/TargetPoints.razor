@@ -56,18 +56,16 @@
 
     public async Task StartNav(Coordinace key)
     {
-
-        var result = await dataService.StartNav(key);
-        if (string.IsNullOrEmpty(result))
-        {
-            model = appState.SelectedModel;
-            appState.SetModel(model, ActionType.NAVIGATE);
-            await this.InvokeAsync(() => this.StateHasChanged());
-        }
+         appState.Nav_Coordiance = key;
+         model = appState.SelectedModel;
+         appState.SetModel(model, ActionType.NAVIGATE);
+        await this.InvokeAsync(() => this.StateHasChanged());
+  
     }
     protected override async Task OnInitializedAsync()
     {
-        // lst = await dataService.Target_Points();
+        if(appState.SelectedModel!=null)
+           lst = await dataService.Target_Points();
         appState.OnChange += ReceiveData;
     }
     public void Dispose()

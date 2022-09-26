@@ -6,6 +6,8 @@ namespace ApiDemoApp.Services
     {
         public RegisterAGVFrom SelectedModel { get; set; }
         public ActionType SelectedType { get; private set; }
+        public AGVSpeed SelectedAGVSpeed { get; set; }
+        public Coordinace Nav_Coordiance { get; set; }
         public List<Coordinace> DrawCoordinates { get; set; } = new List<Coordinace>();
 
         public event Action OnChange;
@@ -30,8 +32,7 @@ namespace ApiDemoApp.Services
         NAVIGATE,
         CANCEL,
         CHARGE,
-        PLUGIN,
-        PLUGOUT,
+        MANUL,
         STOPPED
     }
 }

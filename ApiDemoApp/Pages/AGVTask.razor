@@ -1,0 +1,215 @@
+﻿@page "/taskmanager"
+@attribute [Authorize(Roles="Admin")]
+@using System.ComponentModel.DataAnnotations
+@using ApiDemoApp.Models
+@using ApiDemoApp.Services
+@using System
+@using System.Text
+@using System.Reflection
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject ApiDemoApp.Services.AppState appState
+@inject DataService dataService
+<MudGrid Class="pa-4 mt-16"  >
+    <MudItem xs="12" sm="5"  >
+        <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+            <DataAnnotationsValidator />
+            <MudCard Outlined="true" >
+                <MudCardContent class="d-flex  flex-grow-1 gap-4">
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudField Label="任务标题" Variant="Variant.Outlined">
+                         <MudTextField  Class="mt-3" @bind-Value="model.Title" For="@(() => model.Title)" />
+
+                        </MudField>
+                    </MudItem>
+                       <MudItem xs="12" sm="6" md="4">
+                        <MudField Label="开始时间" Variant="Variant.Outlined" >
+                            <MudTimePicker @bind-Time="time" />
+                        </MudField>
+                    </MudItem>
+
+                  
+                  
+                  
+                     </MudCardContent>
+                   </MudCard>
+                   <MudCard>
+                <MudCardContent class="d-flex  flex-grow-1 gap-4">
+                  
+
+                    <MudItem xs="12" sm="6" md="4" >
+                        <MudField Label="执行模式" Variant="Variant.Outlined" InnerPadding="false">
+                            <MudRadioGroup @bind-SelectedOption="model.CycleStyle">
+                                <MudRadio Option="true" Color="Color.Primary" Dense="true" >单次循环</MudRadio>
+                                <MudRadio Option="false" Color="Color.Secondary" Dense="false">时长循环</MudRadio>
+                            </MudRadioGroup>
+                        </MudField>
+                    </MudItem>
+
+                     <MudItem xs="12" sm="6" md="4" >
+                        <MudField Label="任务完成后" Variant="Variant.Outlined" InnerPadding="false">
+                            <MudRadioGroup @bind-SelectedOption="model.AfterTask" >
+                                <MudRadio Option="false" Dense="true" >返回开始点</MudRadio>
+                                <MudRadio Option="true" Dense="false">去充电</MudRadio>
+                            </MudRadioGroup>
+                        </MudField>
+                    </MudItem>
+                </MudCardContent>
+            </MudCard>
+            <MudCard>
+                <MudCardContent class="d-flex  flex-grow-1 gap-4">
+                    <MudItem xs="12" sm="6" md="4">
+                     
+                           <MudSelect T="string" Label="重复" MultiSelection="true" @bind-Value="week_value" @bind-SelectedValues="model.WeekOptions">
+                            @foreach (var wkday in wkDays)
+                            {
+                                <MudSelectItem T="string" Value="@wkday">@wkday</MudSelectItem>
+                            }
+                        </MudSelect>
+                     
+                    </MudItem>
+                       <MudItem xs="12" sm="6" md="4">
+                        <MudSelect T="string" Label="目标点" MultiSelection="true" @bind-Value="value" @bind-SelectedValues="model.TargetNames">
+                            @foreach (var target in targets)
+                            {
+                                <MudSelectItem T="string" Value="@target">@target</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                   
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">注册</MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </MudItem>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4 mud-height-full">
+            <MudTable Items="@lst" @ref="mudTable" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info" OnRowClick="RowClick" T="AGVTaskModel">
+                <HeaderContent>
+                    <MudTh>机器人编号</MudTh>
+                    <MudTh>任务标题</MudTh>
+                    <MudTh>执行模式</MudTh>
+                    <MudTh>开始时间</MudTh>
+                   <MudTh>任务完成后</MudTh> 
+                   <MudTh>目标点</MudTh> 
+                    <MudTh>重复</MudTh> 
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="机器人编号">@context.AGV_No</MudTd>
+                    <MudTd DataLabel="任务标题">@context.Title</MudTd>
+                    <MudTd DataLabel="执行模式">@executeModel</MudTd>
+                    <MudTd DataLabel="开始时间">@context.StartTime</MudTd>
+                    <MudTd DataLabel="任务完成后">@afterModel</MudTd>
+                     <MudTd DataLabel="目标点">@targeModel</MudTd>
+                    <MudTd DataLabel="重复">@repeatModel</MudTd>
+
+                </RowTemplate>
+            </MudTable>
+        </MudPaper>
+    </MudItem>
+
+</MudGrid>
+
+
+
+@code {
+
+    [Inject] private IDialogService DialogService { get; set; }
+    AGVTaskModel model = new AGVTaskModel();
+    List<AGVTaskModel> lst = new List<AGVTaskModel>();
+    List<string> targets = new List<string>();
+    private bool _loading;
+    AGVTaskModel _selectedItem;
+    bool success;
+    private MudTable<AGVTaskModel> mudTable;
+    TimeSpan? time = new TimeSpan(00, 00, 00);
+    string executeModel="";
+    string afterModel = "";
+    string targeModel="";
+    string repeatModel = "";
+    private string value { get; set; } = "Nothing selected";
+    private string week_value { get; set; } = "Nothing selected";
+    private string[] wkDays =
+    {
+        "周一", "周二", "周三", "周四",
+        "周五", "周六", "周日", 
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            targets.Clear();
+            lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
+            List<TargetPointsModel> pp = await dataService.Target_Points();
+            foreach (var p in pp)
+                targets.Add(p.name);
+            if (lst == null)
+                lst = new List<AGVTaskModel>();
+            foreach (var model in lst)
+                EditShowList(model);
+            StateHasChanged();
+        }
+
+    }
+
+    private async void OnValidSubmit(EditContext context)
+    {
+        success = true;
+        StateHasChanged();
+        model.AGV_No = appState.SelectedModel.name;
+        model.StartTime = time;
+
+        EditShowList(model);
+        lst.Add(model);
+        await localStorage.SetItemAsync<List<AGVTaskModel>>("agv_task", lst);
+    }
+
+    private async void RowClick(TableRowClickEventArgs<AGVTaskModel> tableRowClickEventArgs)
+    {
+        AGVTaskModel aGVTaskModel = tableRowClickEventArgs.Item;
+        bool? result = await DialogService.ShowMessageBox(
+           "警告", 
+           "确实要删除该任务吗!", 
+           yesText:"Delete!", cancelText:"Cancel");
+        if (result != null)
+        {
+            var q = lst.FirstOrDefault(v => v.Title == aGVTaskModel.Title && v.AGV_No == aGVTaskModel.AGV_No);
+            if (q != null)
+            {
+                lst.Remove(q);
+                if (lst.Count == 0)
+                    await localStorage.RemoveItemAsync("agv_task");
+                else
+                    await localStorage.SetItemAsync<List<AGVTaskModel>>("agv_task", lst);
+                StateHasChanged();
+            }
+
+        }
+
+    }
+
+
+    private void EditShowList(AGVTaskModel _model){
+        executeModel = "";
+        afterModel = "";
+        if (_model.CycleStyle)
+            executeModel = "单次循环";
+        else
+            executeModel = "时长循环";
+
+        if (_model.AfterTask)
+            afterModel = "去充电";
+        else
+            afterModel = "返回开始点";
+        foreach(var t in _model.TargetNames)
+            targeModel += t + ",";
+        targeModel = targeModel.TrimEnd(',');
+        foreach(var p in _model.WeekOptions)
+            repeatModel += p +",";
+        repeatModel = repeatModel.TrimEnd(',');
+
+    }
+ 
+}

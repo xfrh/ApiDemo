@@ -29,8 +29,42 @@ namespace ApiDemoApp.Services
                 LogService.LogMessage(ex.Message);
                 return await Task.FromResult<Coordinace>(null);
             }
+        }
 
+        public async Task<String> IMU()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/reeman/imu";
+                var q = await client.GetFromJsonAsync<string>(call_url);
+                return q;
 
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return await Task.FromResult<String>(null);
+            }
+        }
+
+        public async Task<AGVSpeed> Speed()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/reeman/speed";
+                var q = await client.GetFromJsonAsync<AGVSpeed>(call_url);
+                return q;
+
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return await Task.FromResult<AGVSpeed>(null);
+            }
         }
 
         public async Task<List<Coordinace>> Local_Plan()
@@ -170,6 +204,73 @@ namespace ApiDemoApp.Services
             return statusMessage;
         }
 
+
+        public async Task<string> StartNavByTargetName(TargetName pointname)
+        {
+            //  var client = _client.CreateClient("cmd");
+            var client = _client.CreateClient();
+            string statusMessage = "";
+            try
+            {
+                string call_url = Base_URL + "/cmd/nav_name";
+                var stringPayload = JsonSerializer.Serialize(pointname);
+                var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                var httpResponse = await client.PostAsync(call_url, httpContent);
+                statusMessage = await httpResponse.Content.ReadAsStringAsync();
+
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    statusMessage = "";
+                }
+                else
+                {
+                    statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(statusMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+
+            }
+            return statusMessage;
+        }
+
+
+        public async Task<string> ManuMoveCar(AGVSpeed speed)
+        {
+            //  var client = _client.CreateClient("cmd");
+            var client = _client.CreateClient();
+            string statusMessage = "";
+            try
+            {
+                string call_url = Base_URL + "/cmd/speed";
+                var stringPayload = JsonSerializer.Serialize(speed);
+                var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                var httpResponse = await client.PostAsync(call_url, httpContent);
+                statusMessage = await httpResponse.Content.ReadAsStringAsync();
+
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    statusMessage = "";
+                }
+                else
+                {
+                    statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(statusMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+
+            }
+            return statusMessage;
+        }
+
+
         public async Task<string> CancelNav()
         {
             //   var client = _client.CreateClient("cmd");
@@ -206,7 +307,7 @@ namespace ApiDemoApp.Services
                 string call_url = Base_URL + "/cmd/charge";
                 Charge charge = new Charge()
                 {
-                    type = 0,
+                    type = 1,
                     point = "充电桩"
                 };
                 var stringPayload = JsonSerializer.Serialize(charge);
@@ -230,6 +331,9 @@ namespace ApiDemoApp.Services
                 return await Task.FromResult<string>(ex.Message);
             }
         }
+
+
+        
 
         public async Task<string> BatteryEmpower()
         {

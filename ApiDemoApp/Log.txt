@@ -1,0 +1,17 @@
+2022/9/22 17:30:57: The JSON value could not be converted to System.String. Path: $ | LineNumber: 0 | BytePositionInLine: 1..
+2022/9/22 17:33:31: The JSON value could not be converted to System.String. Path: $ | LineNumber: 0 | BytePositionInLine: 1..
+2022/9/22 17:35:44: The JSON value could not be converted to System.String. Path: $ | LineNumber: 0 | BytePositionInLine: 1..
+2022/9/22 17:36:24: The JSON value could not be converted to System.String. Path: $ | LineNumber: 0 | BytePositionInLine: 1..
+2022/9/22 17:56:22: The JSON value could not be converted to System.String. Path: $ | LineNumber: 0 | BytePositionInLine: 1..
+2022/9/24 12:09:07: Input string was not in a correct format..
+2022/9/24 12:09:15: Input string was not in a correct format..
+2022/9/24 12:09:20: Input string was not in a correct format..
+2022/9/24 12:09:27: Input string was not in a correct format..
+2022/9/24 12:13:54: An invalid request URI was provided. Either the request URI must be an absolute URI or BaseAddress must be set..
+2022/9/24 12:13:55: An invalid request URI was provided. Either the request URI must be an absolute URI or BaseAddress must be set..
+2022/9/24 12:16:49: Input string was not in a correct format..
+2022/9/24 12:16:53: Input string was not in a correct format..
+2022/9/24 12:17:00: Input string was not in a correct format..
+2022/9/24 12:18:00: Input string was not in a correct format..
+2022/9/24 12:18:04: Input string was not in a correct format..
+2022/9/24 12:18:10: Input string was not in a correct format..
