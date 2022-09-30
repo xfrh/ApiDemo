@@ -13,41 +13,21 @@
 <MudSnackbarProvider/>
 <MudLayout>
     <MudAppBar Elevation="1" Color="Color.Transparent">
-      
 
-         @if(mapModel){
-            <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
-                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Disabled="@notLogin" />
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.MapsHomeWork" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer" Disabled="@notLogin">增量建图</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Save" IconColor="Color.Inherit" Size="Size.Small" OnClick="@CancelNav" Disabled="@notLogin">保存地图</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.PanoramaPhotosphere" IconColor="Color.Inherit" Size="Size.Small" OnClick="@NavCharge" Disabled="@notLogin">当前地图</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.FormatListNumbered" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">地图列表</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.DataUsage" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">应用地图</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.ImportExport" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">导出地图</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.CloudUpload" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">上传地图</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.DriveFileRenameOutline" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">重命名地图</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.FolderSpecial" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">获取特殊区</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Map" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@ChangeModel">导航模式</MudButton>
-            </MudPaper>
-       
-         }
-         else{
            <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Disabled="@notLogin" />
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Navigation" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer" Disabled="@notLogin">坐标导航</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.ElectricalServices" IconColor="Color.Inherit" Size="Size.Small" OnClick="@NavCharge" Disabled="@notLogin">导航充电</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.CancelScheduleSend" IconColor="Color.Inherit" Size="Size.Small" OnClick="@CancelNav" Disabled="@notLogin">取消导航</MudButton>
-                <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.MoveUp" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer2" Disabled="@notLogin">移动小车</MudButton>
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">用户管理</MudButton>
+             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.MoveUp" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer2" Disabled="@notLogin">移动小车</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.TaskAlt" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@TaskManager">任务管理</MudButton>
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Map" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@ChangeModel">地图模式</MudButton>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Map" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@MapManager">地图管理</MudButton>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">用户管理</MudButton>
+         
             </MudPaper>
             <MudSpacer/>
           <AgvStatus />
-         }
-      
-
-        
+ 
         @if (notLogin)
         {
                <MudTooltip Text="登录">
@@ -102,11 +82,11 @@
     </MudMainContent>
 </MudLayout>
 @code {
+    [Inject] private IDialogService DialogService { get; set; }
     bool _drawerOpen = false;
     bool openRight = false;
     bool notLogin = true;
-    bool mapModel = false;
-    bool targetPoint_Nav = true;
+     bool targetPoint_Nav = true;
 
     RegisterAGVFrom model;
     User login_user;
@@ -127,6 +107,7 @@
             {
                 var en = Enum.Parse<TestUserType>(login_user.Role);
                 var authState = await ((TestAuthenticationStateProvider)_authState).ChangeUser(en);
+
             }
             var authenticationState = await _authState.GetAuthenticationStateAsync();
             if(authenticationState.User!=null && authenticationState.User.Identity.IsAuthenticated)
@@ -148,9 +129,7 @@
         _drawerOpen = !_drawerOpen;
     }
 
-    void ChangeModel(){
-        mapModel = !mapModel;
-    }
+  
 
     void CancelNav()
     {
@@ -171,16 +150,22 @@
 
     void UserManager()
     {
-        appState.SelectedModel = null;
+        // appState.SelectedModel = null;
         _navigationManager.NavigateTo("/usermanager",true);
     }
 
-      void TaskManager()
+    void MapManager()
+    {
+        if (appState.SelectedModel == null) return;
+        _navigationManager.NavigateTo("/mapmanager", true);
+    }
+
+    void TaskManager()
     {
         if (appState.SelectedModel == null) return;
         _navigationManager.NavigateTo("/taskmanager",true);
     }
-
+   
     public void ReceivedModel()
     {
         if (appState.SelectedModel != null)

@@ -1,4 +1,9 @@
 ﻿using ApiDemoApp.Models;
+using ApiDemoApp.Pages;
+using MudBlazor.Charts.SVG.Models;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 
@@ -388,6 +393,266 @@ namespace ApiDemoApp.Services
             }
 
         }
+
+        #region mapmode
+
+        public async Task<string> Switch_Map()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/set_mode";
+             
+                var stringPayload = "{ \"mode\":3}";
+                var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                var httpResponse = await client.PostAsync(call_url, httpContent);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                    string errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(errorMessage);
+                    return errorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+        }
+
+
+        public async Task<string> Savemap()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/save_map";
+                var httpResponse = await client.PostAsync(call_url, null);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                    string errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(errorMessage);
+                    return errorMessage;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+
+        }
+
+        public async Task<AGVMapModel> Cur_Map_Name()
+        {
+            //  var client = _client.CreateClient("nav");
+            var client = _client.CreateClient();
+            string call_url = Base_URL + "/reeman/cur_map";
+            try
+            {
+                return await client.GetFromJsonAsync<AGVMapModel>(call_url);
+
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return await Task.FromResult<AGVMapModel>(null);
+            }
+        }
+
+        public async Task<List<AGVMapModel>> MapList()
+        {
+            //  var client = _client.CreateClient("nav");
+            var client = _client.CreateClient();
+            string call_url = Base_URL + "/reeman/history_map";
+            try
+            {
+                return await client.GetFromJsonAsync<List<AGVMapModel>>(call_url);
+
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return await Task.FromResult<List<AGVMapModel>>(null);
+            }
+        }
+
+        public async Task<string> ApplyMap(AGVMapModel aGVMap)
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/save_map";
+                var stringPayload = JsonSerializer.Serialize(aGVMap);
+                var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                var httpResponse = await client.PostAsync(call_url, httpContent);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                    string errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(errorMessage);
+                    return errorMessage;
+                }
+               
+            }
+            catch (Exception ex)
+            {
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+
+        }
+
+        public async Task<string> MapDownLoad(AGVMapModel aGVMap)
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/export_map";
+                var stringPayload = JsonSerializer.Serialize(aGVMap);
+                var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                var httpResponse = await client.PostAsync(call_url, httpContent);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                    string errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(errorMessage);
+                    return errorMessage;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+        }
+
+        public async Task<string> RenameMap(AGVMapModel aGVMapOld, AGVMapModel aGVMapNew)
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/rename_map";
+                var stringPayload = "{ \"old_name\":\"" + aGVMapOld.name + "\",\"new_name\":\""+ aGVMapNew.name + "\"}";
+                var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                var httpResponse = await client.PostAsync(call_url, httpContent);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                    string errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(errorMessage);
+                    return errorMessage;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+
+        }
+
+
+        public async Task<string> UploadMap(string filePath)
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/import_map";
+                string _filename = Path.GetFileName(filePath);
+                using (var multipartFormContent = new MultipartFormDataContent())
+                {
+                    //Load the file and set the file's Content-Type header
+                    var fileStreamContent = new StreamContent(File.OpenRead(filePath));
+                    fileStreamContent.Headers.ContentType = new MediaTypeHeaderValue("image/png");
+
+                    //Add the file
+                    multipartFormContent.Add(fileStreamContent, name: "file", fileName: _filename);
+
+                    //Send it
+                    var response = await client.PostAsync(call_url, multipartFormContent);
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadAsStringAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+        }
+
+        public async Task<string> Delete(AGVMapModel aGVMap)
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/delete_map";
+                var stringPayload = JsonSerializer.Serialize(aGVMap);
+                var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                var httpResponse = await client.PostAsync(call_url, httpContent);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                    string errorMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(errorMessage);
+                    return errorMessage;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+
+        }
+
+        public async Task<string> SpecialPloy()
+        {
+            //  var client = _client.CreateClient("nav");
+            var client = _client.CreateClient();
+            string call_url = Base_URL + "/reeman/special_polygon";
+            try
+            {
+                return await client.GetFromJsonAsync<string>(call_url);
+
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+                return await Task.FromResult<string>(null);
+            }
+        }
+
+        #endregion
 
         public async Task<MapLayer> Cur_Map()
         {

@@ -52,6 +52,10 @@
               "target": "Package",
               "version": "[13.0.1, )"
             },
+            "Quartz": {
+              "target": "Package",
+              "version": "[3.5.0, )"
+            },
             "SixLabors.Fonts": {
               "target": "Package",
               "version": "[1.0.0-beta18, )"

@@ -4,6 +4,9 @@ using ApiDemoApp.Services;
 using Blazored.LocalStorage;
 using Microsoft.AspNetCore.Components.Authorization;
 using MudBlazor.Services;
+using Quartz.Impl;
+using Quartz;
+using Quartz.Spi;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,7 @@ builder.Services.AddSingleton<DataService>();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHttpClient();
+builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
 
 builder.Services.AddHttpClient("cmd", c => {
     c.BaseAddress = new Uri(builder.Configuration["cmd"]);
@@ -41,7 +45,6 @@ builder.Services.AddCors(options =>
 
 });
 
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -51,10 +54,9 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
 app.UseCors();
 app.UseRouting();
 app.MapBlazorHub();

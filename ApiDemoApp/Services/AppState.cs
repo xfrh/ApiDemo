@@ -33,6 +33,7 @@ namespace ApiDemoApp.Services
         CANCEL,
         CHARGE,
         MANUL,
-        STOPPED
+        STOPPED,
+        ADDTASK,
     }
 }

@@ -1,16 +1,27 @@
 ﻿@using ApiDemoApp.Models
 @using ApiDemoApp.Services
+@using Quartz
+@using Quartz.Impl
 @inject AppState appState
 @inject DataService dataService
 @inject ISnackbar Snackbar
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject ISchedulerFactory _iSchedulerFactory
 @implements IDisposable
      <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
      @if(appState.SelectedModel== null){
         <MudText Typo="Typo.subtitle2">还未选择机器人</MudText>
     }
     else{
+        @if(lst!=null && lst.Count>0){
+            <MudTooltip Text=@cur_time>
+            <MudAvatar Color="Color.Surface" Variant="Variant.Filled">
+                <MudIcon Color="Color.Dark" Icon="@Icons.Outlined.Timer" Size="Size.Small" />
+            </MudAvatar>
+           </MudTooltip>
+          
+         }
 
-        
         <MudTooltip Text=@cur_Battery>
           <MudAvatar Color="Color.Success" Variant="Variant.Filled">
                 <MudIcon Color="Color.Dark" Icon="@Icons.Filled.BatteryAlert" Size="Size.Small" />
@@ -27,13 +38,16 @@
         </MudAvatar>
        </MudTooltip>
 
-        <MudTooltip Text=@model.type>
+          <MudTooltip Text=@model.type>
             <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled">
                 <MudIcon Color="Color.Dark" Icon="@Icons.Filled.Info" Size="Size.Small" />
             </MudAvatar>
         </MudTooltip>
          
-    }
+         
+     }
+
+  
   
      </MudPaper>
 
@@ -46,15 +60,110 @@
     string cur_Position;
     string cur_Battery;
     string cur_Speed;
-
+    string cur_time;
+    List<AGVTaskModel> lst;
     protected override void OnInitialized()
     {
         model = appState.SelectedModel;
+        cur_time = DateTime.Now.ToString("HH:mm");
         appState.OnChange += ReceivedModel;
         if (model != null)
             MyTask();
     }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender){
+            lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
+            var agv_lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
+            if(lst!=null && lst.Count>0){
+                if(appState.SelectedModel==null)
+                {
+                    foreach (var model in lst){
+                          var url = agv_lst.FirstOrDefault(v => v.name == model.AGV_No).url;
+                         await AddToSchedule(model,url);
+                    }
+                      
+                }
+            }
+            StateHasChanged();
+        }
 
+    }
+
+    private async Task AddToSchedule(AGVTaskModel model,string url)
+    {
+        try
+        {
+            var scheduler = await _iSchedulerFactory.GetScheduler();
+            IJobDetail job = JobBuilder.Create<ScheduleJobService>()
+           .WithIdentity(model.Title, model.AGV_No)
+           .UsingJobData("url",url)
+           .UsingJobData("target", model.TargetName)
+           .Build();
+
+            var triggerKey = new TriggerKey(model.Title);
+            string schedulModel = EditShowList(model);
+            // Trigger the job to run now, and then repeat every 10 seconds
+            ITrigger trigger = TriggerBuilder.Create()
+                .WithIdentity(triggerKey)
+                .StartNow()
+                 //.WithSimpleSchedule(x => x
+                 //        .WithIntervalInSeconds(10)
+                 //        .RepeatForever())
+                 .WithCronSchedule(schedulModel) //every Wednesday at 12:00 pm "0 0 12 ? * WED"
+
+                .Build();
+            await scheduler.Start();
+            // Tell quartz to schedule the job using our trigger
+            await scheduler.ScheduleJob(job, trigger);
+        }
+        catch (Exception ex)
+        {
+
+            LogService.LogMessage(ex.Message);
+        }
+
+
+    }
+
+    private string EditShowList(AGVTaskModel _model)
+    {
+
+        string schedulModel = "0 " + _model.StartTime.Value.Minutes + " " + _model.StartTime.Value.Hours + " ? * ";
+        foreach (var p in _model.WeekOptions)
+        {
+            switch (p)
+            {
+                case "周一":
+                    schedulModel += "MON,";
+                    break;
+                case "周二":
+                    schedulModel += "TUE,";
+                    break;
+                case "周三":
+                    schedulModel += "WED,";
+                    break;
+                case "周四":
+                    schedulModel += "THU,";
+                    break;
+                case "周五":
+                    schedulModel += "FRI,";
+                    break;
+                case "周六":
+                    schedulModel += "SAT,";
+                    break;
+                case "周日":
+                    schedulModel += "SUN,";
+                    break;
+
+            }
+        }
+
+        schedulModel = schedulModel.TrimEnd(',');
+
+        return schedulModel;
+
+    }
 
     public void Dispose()
     {
@@ -162,7 +271,7 @@
                             if (moveStatus.status == 3){
                                 ShowSanckBar("导航完成");
                             }
-                            else if (moveStatus.status == 4){
+                            else if (moveStatus.status == 2){
                                 ShowSanckBar("导航被取消");
 
                             }
@@ -236,6 +345,12 @@
                         await this.InvokeAsync(() => this.StateHasChanged());
                     }
                     break;
+
+                case ActionType.ADDTASK:
+                    lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
+                    await this.InvokeAsync(() => this.StateHasChanged());
+                    break;
+
 
             }
         }

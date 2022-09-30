@@ -15,3 +15,23 @@
 2022/9/24 12:18:00: Input string was not in a correct format..
 2022/9/24 12:18:04: Input string was not in a correct format..
 2022/9/24 12:18:10: Input string was not in a correct format..
+2022/9/28 10:56:58: Name cannot be null. (Parameter 'name').
+2022/9/28 11:18:16: Name cannot be null. (Parameter 'name').
+2022/9/28 11:53:44: Name cannot be null. (Parameter 'name').
+2022/9/28 11:54:44: Name cannot be null. (Parameter 'name').
+2022/9/28 11:55:42: Name cannot be null. (Parameter 'name').
+2022/9/28 11:58:04: Name cannot be null. (Parameter 'name').
+2022/9/28 12:00:38: Unable to store Job: 'AGV-1.test3', because one already exists with this identification..
+2022/9/28 12:22:58: Unable to store Job: 'AGV-1.test3', because one already exists with this identification..
+2022/9/28 12:23:47: Unable to store Job: 'AGV-1.test3', because one already exists with this identification..
+2022/9/29 16:00:25: An invalid request URI was provided. Either the request URI must be an absolute URI or BaseAddress must be set..
+2022/9/29 18:53:42: Input string was not in a correct format..
+2022/9/29 18:54:07: Input string was not in a correct format..
+2022/9/29 18:58:01: Input string was not in a correct format..
+2022/9/29 19:00:11: Input string was not in a correct format..
+2022/9/29 19:06:57: '<' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0..
+2022/9/29 19:06:58: '<' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0..
+2022/9/29 19:06:58: '<' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0..
+2022/9/29 19:07:40: Input string was not in a correct format..
+2022/9/29 19:11:01: Input string was not in a correct format..
+2022/9/29 19:16:23: Input string was not in a correct format..

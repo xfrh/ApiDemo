@@ -1,0 +1,204 @@
+﻿@page "/mapmanager"
+@attribute [Authorize(Roles = "Admin")]
+@using ApiDemoApp.Models
+@using ApiDemoApp.Services
+@inject DataService dataService
+@inject AppState appState;
+@inject ISnackbar snackBar;
+<MudPaper Height="400px" Width="100%" Elevation="0" Class=" mt-16">
+    <MudContainer MaxWidth="MaxWidth.Medium">
+        <MudPopover Open="@_isOpen" Fixed="true" Class="px-4 pt-4" AnchorOrigin="Origin.TopCenter" TransformOrigin="Origin.TopCenter">
+    <div class="d-flex flex-column" style="width:400px" >
+        <MudText>正在扫描地图.....</MudText>
+        <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+        <MudButton OnClick="@Save" Class="ml-auto mr-n3 mb-1" Color="Color.Error" >完成</MudButton>
+    </div>
+</MudPopover>
+        <MudPaper Height="60px" Width="100%" Square="true">
+            <MudFab StartIcon="@Icons.Filled.Bookmark" Label="增量扫描" OnClick="@Scan" />
+        </MudPaper>
+        <MudPaper Height="400px" Width="100%" Square="true" Elevation="0">
+             <MudCard Elevation="25">
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">修改地图名称</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudTextField @bind-Value="map.name" Label="地图名称" Variant="Variant.Text" Margin="Margin.Normal" ReadOnly></MudTextField>
+        <MudTextField @bind-Value="newname" Label="新的地图名称" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="Changename">修改名称</MudButton>
+    </MudCardContent>
+        </MudCard>
+<br />
+            <br />
+            <MudTable Elevation="25" Items="@maps" Filter="new Func<AGVMapModel, bool>(Search)" @bind-map="map">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">地图列表</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="searchString" Placeholder="搜索地图..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>地图名称</MudTh>
+                
+                </HeaderContent>
+                <RowTemplate>
+                 
+                    <MudTd DataLabel="FirstName">@context.name</MudTd>
+                 
+                    <MudTd DataLabel="">
+                        <MudFab @onclick="@(()=>Edit(@context.name))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" Title="编辑地图" />
+                         <MudFab @onclick="@(()=>DownLoad(@context.name))" Color="Color.Primary" Icon="@Icons.Filled.CloudDownload" Size="Size.Small" IconSize="Size.Small" Title="下载地图" />
+                        <MudFab @onclick="@(()=>Apply(@context.name))" Color="Color.Primary" Icon="@Icons.Filled.LocationOn" Size="Size.Small" IconSize="Size.Small" Title="应用地图" />
+                        <MudFab @onclick="@(()=>Delete(@context.name))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" Title="删除地图" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudPaper>
+    </MudContainer>
+</MudPaper>
+
+
+@code {
+    private string searchString = "";
+    private string newname = "";
+    private AGVMapModel map = new AGVMapModel();
+    private List<AGVMapModel> maps = new List<AGVMapModel>();
+    public bool _isOpen;
+    [Inject] private IDialogService DialogService { get; set; }
+
+    public void ToggleOpen()
+    {
+        if (_isOpen)
+            _isOpen = false;
+        else
+            _isOpen = true;
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await  Getmaps();
+    }
+    private async Task<List<AGVMapModel>>  Getmaps()
+    {
+        maps = await dataService.MapList();
+        return maps;
+    }
+    private bool Search(AGVMapModel map)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+        if (map.name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        return false;
+    }
+    private async void Save()
+    {
+        bool? result = await DialogService.ShowMessageBox(
+         "提示",
+         "要保存当前扫描地图吗？",
+         yesText: "保存", cancelText: "取消");
+        if (result != null)
+        {
+            await dataService.Savemap();
+            map = new AGVMapModel();
+            snackBar.Add("当前地图被保存.", Severity.Success);
+            await Getmaps();
+        }
+        ToggleOpen();
+        StateHasChanged();
+    }
+    private void Edit(string name)
+    {
+        map = maps.FirstOrDefault(c => c.name == name);
+
+    }
+
+    private async void Changename()
+    {
+        if (map == null) return;
+        if (string.IsNullOrEmpty(newname)) return;
+        AGVMapModel _newMap = new AGVMapModel() { name = newname };
+        bool? result = await DialogService.ShowMessageBox(
+         "提示",
+         "要修改" + map.name + "地图吗？",
+         yesText: "确定", cancelText: "取消");
+        if (result != null)
+        {
+            await dataService.RenameMap(map, _newMap);
+            snackBar.Add("地图名称已修改", Severity.Success);
+            await Getmaps();
+            map = new AGVMapModel();
+            newname = "";
+            await Getmaps();
+            StateHasChanged();
+        }
+
+    }
+    private async void DownLoad(string name){
+        map = maps.FirstOrDefault(c => c.name == name);
+        if (map == null) return;
+        bool? result = await DialogService.ShowMessageBox(
+         "提示",
+         "要下载" + map.name +  "地图吗？",
+         yesText: "确定", cancelText: "取消");
+        if (result != null)
+        {
+            await dataService.MapDownLoad(map);
+            snackBar.Add("地图下载", Severity.Success);
+            await Getmaps();
+        }
+    }
+
+    private async void Apply(string name)
+    {
+        map = maps.FirstOrDefault(c => c.name == name);
+        if (map == null) return;
+        bool? result = await DialogService.ShowMessageBox(
+           "提示",
+           "要应用" + map.name +  "地图吗？",
+           yesText: "确定", cancelText: "取消");
+        if(result!=null){
+            await dataService.ApplyMap(map);
+            snackBar.Add("地图已应用", Severity.Success);
+            StateHasChanged();
+        }
+
+    }
+    private async void Delete(string name)
+    {
+
+        bool? result = await DialogService.ShowMessageBox(
+           "提示",
+           "要删除" + name + "地图吗？",
+           yesText: "确定", cancelText: "取消");
+        if (result != null)
+        {
+            var map = maps.FirstOrDefault(c => c.name == name);
+            await dataService.Delete(map);
+            snackBar.Add("地图已删除.", Severity.Success);
+            await Getmaps();
+            StateHasChanged();
+        }
+    }
+
+    private async void Scan()
+    {
+
+        bool? result = await DialogService.ShowMessageBox(
+          "提示",
+          "切换之前请保证定位正确，否则可能会导致地图与实际环境产生偏差",
+          yesText: "确定", cancelText: "取消");
+        if (result != null)
+        {
+            ToggleOpen();
+            await dataService.Switch_Map();
+            snackBar.Add("转到地图增量模式扫描.", Severity.Success);
+            StateHasChanged();
+        }
+    }
+
+  
+}
