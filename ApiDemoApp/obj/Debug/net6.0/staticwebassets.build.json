@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "MWtXHULEZHutWU6kPM4jfVwJey4cOS2LWwYwrMhwwFU=",
+  "Hash": "OT4PN1CTB/By2CZlk3+4x8PMmb75VV9AvyFGPT3yVlU=",
   "Source": "ApiDemoApp",
   "BasePath": "_content/ApiDemoApp",
   "Mode": "Default",
@@ -10,7 +10,7 @@
     {
       "Name": "ApiDemoApp\\wwwroot",
       "Source": "ApiDemoApp",
-      "ContentRoot": "D:\\ApiDemo\\apidemo\\ApiDemoApp\\wwwroot\\",
+      "ContentRoot": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\wwwroot\\",
       "BasePath": "_content/ApiDemoApp",
       "Pattern": "**"
     }
@@ -85,10 +85,10 @@
       "OriginalItemSpec": "C:\\Users\\frank\\.nuget\\packages\\mudblazor\\6.0.12\\staticwebassets\\MudBlazor.min.js.gz"
     },
     {
-      "Identity": "D:\\ApiDemo\\apidemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\bundle\\ApiDemoApp.styles.css",
+      "Identity": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\bundle\\ApiDemoApp.styles.css",
       "SourceId": "ApiDemoApp",
       "SourceType": "Computed",
-      "ContentRoot": "D:\\ApiDemo\\apidemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\bundle\\",
+      "ContentRoot": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\bundle\\",
       "BasePath": "_content/ApiDemoApp",
       "RelativePath": "ApiDemoApp.styles.css",
       "AssetKind": "All",
@@ -99,13 +99,13 @@
       "AssetTraitValue": "ApplicationBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "D:\\ApiDemo\\apidemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\bundle\\ApiDemoApp.styles.css"
+      "OriginalItemSpec": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\bundle\\ApiDemoApp.styles.css"
     },
     {
-      "Identity": "D:\\ApiDemo\\apidemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\ApiDemoApp.bundle.scp.css",
+      "Identity": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\ApiDemoApp.bundle.scp.css",
       "SourceId": "ApiDemoApp",
       "SourceType": "Computed",
-      "ContentRoot": "D:\\ApiDemo\\apidemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\",
+      "ContentRoot": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\",
       "BasePath": "_content/ApiDemoApp",
       "RelativePath": "ApiDemoApp.bundle.scp.css",
       "AssetKind": "All",
@@ -116,13 +116,13 @@
       "AssetTraitValue": "ProjectBundle",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
-      "OriginalItemSpec": "D:\\ApiDemo\\apidemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\ApiDemoApp.bundle.scp.css"
+      "OriginalItemSpec": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\obj\\Debug\\net6.0\\scopedcss\\projectbundle\\ApiDemoApp.bundle.scp.css"
     },
     {
-      "Identity": "D:\\ApiDemo\\apidemo\\ApiDemoApp\\wwwroot\\favicon.ico",
+      "Identity": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\wwwroot\\favicon.ico",
       "SourceId": "ApiDemoApp",
       "SourceType": "Discovered",
-      "ContentRoot": "D:\\ApiDemo\\apidemo\\ApiDemoApp\\wwwroot\\",
+      "ContentRoot": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\wwwroot\\",
       "BasePath": "_content/ApiDemoApp",
       "RelativePath": "favicon.ico",
       "AssetKind": "All",

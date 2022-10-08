@@ -19,6 +19,34 @@ build_property._RazorSourceGeneratorDebug =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AddAGV.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRkQUdWLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/Admin.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AGVList.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQUdWTGlzdC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AGVMap.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQUdWTWFwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AGVPoints.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQUdWUG9pbnRzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AgvStatus.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWd2U3RhdHVzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AGVTask.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQUdWVGFzay5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/BatteryStatus.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQmF0dGVyeVN0YXR1cy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -51,6 +79,18 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9jYWxQbGFuLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/Logout.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9nb3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/MapManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTWFwTWFuYWdlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/MoveAction.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTW92ZUFjdGlvbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -69,6 +109,18 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/PlugInOut.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGx1Z0luT3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/TargetPoints.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGFyZ2V0UG9pbnRzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/TargetRoutes.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVGFyZ2V0Um91dGVzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/UserManager.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlck1hbmFnZXIucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/ApiDemo/ApiDemo/ApiDemoApp/Shared/SurveyPrompt.razor]
