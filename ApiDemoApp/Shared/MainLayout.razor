@@ -17,9 +17,7 @@
            <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Disabled="@notLogin" />
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Navigation" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer" Disabled="@notLogin">坐标导航</MudButton>
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.ElectricalServices" IconColor="Color.Inherit" Size="Size.Small" OnClick="@NavCharge" Disabled="@notLogin">导航充电</MudButton>
-            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.CancelScheduleSend" IconColor="Color.Inherit" Size="Size.Small" OnClick="@CancelNav" Disabled="@notLogin">取消导航</MudButton>
-             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.MoveUp" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer2" Disabled="@notLogin">移动小车</MudButton>
+            <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.MoveUp" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer2" Disabled="@notLogin">移动小车</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.TaskAlt" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@TaskManager">任务管理</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Map" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@MapManager">地图管理</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">用户管理</MudButton>
@@ -59,7 +57,7 @@
        <AGVList/>
     </MudDrawer>
    
-    <MudDrawer @bind-Open="@openRight" Fixed="false" Anchor="Anchor.Right" Elevation="2" Variant="@DrawerVariant.Temporary" Height="800px">
+    <MudDrawer @bind-Open="@openRight" Fixed="false" Anchor="Anchor.Right" Elevation="2" Variant="@DrawerVariant.Temporary" Height="800px" Width="500px">
            
             @if(targetPoint_Nav){
                  <MudDrawerHeader>
@@ -171,11 +169,11 @@
         if (appState.SelectedModel != null)
         {
             model=appState.SelectedModel;
-            if(appState.SelectedType == ActionType.NAVIGATE)
-            {
-                ToggleRightDrawer();
-                StateHasChanged();
-            }
+            //if(appState.SelectedType == ActionType.NAVIGATE || appState.SelectedType==ActionType.CANCEL)
+            //{
+            //    ToggleRightDrawer();
+            //    StateHasChanged();
+            //}
 
         }
 

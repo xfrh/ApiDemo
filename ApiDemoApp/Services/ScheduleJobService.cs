@@ -8,45 +8,41 @@ namespace ApiDemoApp.Services
 {
     public class ScheduleJobService : IJob
     {
-       
+        string Base_URL;
+        string after_target;
+        MoveStatus moveStatus;
+        Queue<string> routes;
+        Charge charge = new Charge()
+        {
+            type = 1,
+            point = "充电桩"
+        };
         public async Task Execute(IJobExecutionContext context)
         {
             try
             {
+                routes = new Queue<string>();
+                moveStatus = new MoveStatus();
                 JobKey key = context.JobDetail.Key;
                 JobDataMap dataMap = context.JobDetail.JobDataMap;
-                string url = "http://" +  dataMap.GetString("url");
+                Base_URL = "http://" +  dataMap.GetString("url");
                 string target = dataMap.GetString("target");
-                if(target == "充电桩")
-                {
-                    using (var client = new HttpClient())
-                    {
-                        string call_url = url + "/cmd/charge";
-                        Charge charge = new Charge()
-                        {
-                            type = 1,
-                            point = "充电桩"
-                        };
-                        var stringPayload = JsonSerializer.Serialize(charge);
-                        var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
-                        await client.PostAsync(call_url, httpContent);
-                       
-                    }
-                }
-                else
-                {
-                    using (var client = new HttpClient())
-                    {
-                        string call_url =url + "/cmd/nav_name";
-                        var stringPayload = JsonSerializer.Serialize(target);
-                        var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
-                        var httpResponse = await client.PostAsync(call_url, httpContent);
-                        await httpResponse.Content.ReadAsStringAsync();
-                    }
+                after_target = dataMap.GetString("after");
 
+                string[] targets = target.Split(",");
+                for (int i = 0; i < targets.Length; i++)
+                {
+                    var name = targets[i].Trim();
+                    if (!string.IsNullOrEmpty(name))
+                        routes.Enqueue(name);
                 }
-
-               
+                if(after_target == null)
+                {
+                    var last = routes.Last();
+                    if (last != "充电桩")
+                        routes.Enqueue("充电桩");
+                }
+                await Task.Run(() => ExecuteTask());
 
             }
             catch (Exception ex)
@@ -57,7 +53,117 @@ namespace ApiDemoApp.Services
            
         }
 
-     
+        public async Task ExecuteTask()
+        {
+            while (routes.Count > 0)
+            {
+                moveStatus = await Cur_Status();
+                switch (moveStatus.status)
+                {
+                    case 0:
+                    case 3:
+                            string number = routes.Dequeue();
+                            await StartNav(new TargetName() { point = number });
+                    break;
+                    case 2:
+                    case 4:
+                        routes.Clear();
+                    break;
+                }
+                Thread.Sleep(2000);
+            }
+            if(routes.Count==0 && after_target != null)
+            {
+                Coordinace coordinace = JsonSerializer.Deserialize<Coordinace>(after_target);
+                await StartNav(coordinace);
+            }
+        }
+
+        public async Task<MoveStatus> Cur_Status()
+        {
+           try
+            {
+                using (var client = new HttpClient())
+                {
+                    string call_url = Base_URL + "/reeman/movebase_status";
+                    return await client.GetFromJsonAsync<MoveStatus>(call_url);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                LogService.LogMessage(ex.Message);
+                return await Task.FromResult<MoveStatus>(null);
+            }
+        }
+        public async Task<string> StartNav(Coordinace coordinace)
+        {
+            string statusMessage = "";
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    string call_url = Base_URL + "/cmd/nav";
+                    coordinace.theta = coordinace.theta * Math.PI / 180;
+                    var stringPayload =JsonSerializer.Serialize(coordinace);
+                    var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                    var httpResponse = await client.PostAsync(call_url, httpContent);
+                    statusMessage = await httpResponse.Content.ReadAsStringAsync();
+
+                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        statusMessage = "";
+                    }
+                    else
+                    {
+                        statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                        LogService.LogMessage(statusMessage);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+
+            }
+            return statusMessage;
+        }
+        public async Task<string> StartNav(TargetName pointname)
+        {
+                 
+            string statusMessage = "";
+            try
+            {
+                 using (var client = new HttpClient())
+                {
+                    string call_url = Base_URL + pointname.point == "充电桩"? "/cmd/charge" : "/cmd/nav_point";
+                    var stringPayload = pointname.point == "充电桩" ? JsonSerializer.Serialize(charge) : JsonSerializer.Serialize(pointname);
+                    var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                    var httpResponse = await client.PostAsync(call_url, httpContent);
+                    statusMessage = await httpResponse.Content.ReadAsStringAsync();
+
+                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        statusMessage = "";
+                    }
+                    else
+                    {
+                        statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                        LogService.LogMessage(statusMessage);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+
+            }
+            return statusMessage;
+        }
+
+       
 
     }
 }

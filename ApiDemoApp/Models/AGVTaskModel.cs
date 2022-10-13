@@ -7,6 +7,7 @@
         public bool CycleStyle { get; set; }
         public TimeSpan? StartTime { get; set; }
         public IEnumerable<string> WeekOptions { get; set; } = new HashSet<string>() { "周一" };
+        public IEnumerable<string> TargetOptions { get; set; } = new HashSet<string>();
         public string TargetName { get; set; }
         public bool AfterTask { get; set; }
 

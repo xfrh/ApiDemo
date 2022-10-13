@@ -2,6 +2,7 @@
 @using ApiDemoApp.Services
 @using Quartz
 @using Quartz.Impl
+@using System.Text.Json
 @inject AppState appState
 @inject DataService dataService
 @inject ISnackbar Snackbar
@@ -79,10 +80,10 @@
                 if(appState.SelectedModel==null)
                 {
                     foreach (var model in lst){
-                          var url = agv_lst.FirstOrDefault(v => v.name == model.AGV_No).url;
-                         await AddToSchedule(model,url);
+                        var url = agv_lst.FirstOrDefault(v => v.name == model.AGV_No).url;
+                        await AddToSchedule(model,url);
                     }
-                      
+
                 }
             }
             StateHasChanged();
@@ -94,11 +95,14 @@
     {
         try
         {
+            dataService.Base_URL ="http://" + url;
+            Coordinace start_point = await dataService.Cur_Position();
             var scheduler = await _iSchedulerFactory.GetScheduler();
             IJobDetail job = JobBuilder.Create<ScheduleJobService>()
            .WithIdentity(model.Title, model.AGV_No)
            .UsingJobData("url",url)
            .UsingJobData("target", model.TargetName)
+           .UsingJobData("after", model.AfterTask ? null : JsonSerializer.Serialize(start_point))
            .Build();
 
             var triggerKey = new TriggerKey(model.Title);
@@ -248,11 +252,11 @@
                     break;
                 case ActionType.NAVIGATE:
                     await MyTask();
-                    if(isBatteryInCharge()){
+                    //if(isBatteryInCharge()){
 
-                        ShowSanckBar("正在充电中");
-                        return;
-                    }
+                    //    ShowSanckBar("正在充电中");
+                    //    return;
+                    //}
                     if(isStopBtnPressed()){
                         ShowSanckBar("急停开关打开了");
                         return;
@@ -270,10 +274,11 @@
                         {
                             if (moveStatus.status == 3){
                                 ShowSanckBar("导航完成");
+                                appState.SetModel(model, ActionType.COMPLETE);
                             }
                             else if (moveStatus.status == 2){
                                 ShowSanckBar("导航被取消");
-
+                                appState.SetModel(model, ActionType.CANCEL);
                             }
 
                             break;
@@ -290,7 +295,10 @@
                 case ActionType.CANCEL:
                     await dataService.CancelNav();
                     ShowSanckBar("导航被取消");
+                 
                     break;
+
+
                 case ActionType.CHARGE:
                     await MyTask();
                     if (isStopBtnPressed())
@@ -327,12 +335,12 @@
                     break;
                 case ActionType.MANUL:
                     await MyTask();
-                    if (isBatteryInCharge())
-                    {
+                    //if (isBatteryInCharge())
+                    //{
 
-                        ShowSanckBar("正在充电中");
-                        return;
-                    }
+                    //    ShowSanckBar("正在充电中");
+                    //    return;
+                    //}
                     if (isStopBtnPressed())
                     {
                         ShowSanckBar("急停开关打开了");

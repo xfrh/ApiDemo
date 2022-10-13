@@ -217,7 +217,7 @@ namespace ApiDemoApp.Services
             string statusMessage = "";
             try
             {
-                string call_url = Base_URL + "/cmd/nav_name";
+                string call_url = Base_URL + "/cmd/nav_point";
                 var stringPayload = JsonSerializer.Serialize(pointname);
                 var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
                 var httpResponse = await client.PostAsync(call_url, httpContent);

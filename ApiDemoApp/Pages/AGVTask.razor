@@ -8,6 +8,7 @@
 @using System.Reflection
 @using Quartz
 @using Quartz.Impl
+@using System.Text.Json
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject ApiDemoApp.Services.AppState appState
 @inject DataService dataService
@@ -71,7 +72,7 @@
                      
                     </MudItem>
                        <MudItem xs="12" sm="6" md="4">
-                        <MudSelect Label="目标点"  @bind-Value="@model.TargetName" >
+                        <MudSelect Label="目标点" MultiSelection="true" @bind-Value="target_value" @bind-SelectedValues="model.TargetOptions">
                             @foreach (var target in targets)
                             {
                                 <MudSelectItem Value="@target">@target</MudSelectItem>
@@ -131,6 +132,8 @@
     TimeSpan? time = new TimeSpan(00, 00, 00);
     string schedulModel = "0 0 12 ? *";
     private string week_value { get; set; } = "Nothing selected";
+    private string target_value { get; set; } = "Nothing selected";
+    private Coordinace start_point;
     private string[] wkDays =
     {
         "周一", "周二", "周三", "周四",
@@ -142,6 +145,7 @@
         if (firstRender)
         {
             targets.Clear();
+            start_point = await dataService.Cur_Position();
             lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
             List<TargetPointsModel> pp = await dataService.Target_Points();
             foreach (var p in pp)
@@ -157,10 +161,21 @@
 
     private async void OnValidSubmit(EditContext context)
     {
-       
+        if(string.IsNullOrEmpty(model.Title)) return;
+        var q = lst.FirstOrDefault(v=>v.Title== model.Title);
+        if(q!=null) return;
+        if(model.WeekOptions.Count()==0) return;
+        if (model.TargetOptions.Count() == 0) return;
+
+        string temp = "";
         model.AGV_No = appState.SelectedModel.name;
         model.StartTime = time;
-
+        model.TargetName="";
+       
+        foreach(var item in model.TargetOptions){
+            temp += item + ",";
+        }
+        model.TargetName = temp.TrimEnd(',');
         EditShowList(model);
         lst.Add(model);
         await localStorage.SetItemAsync<List<AGVTaskModel>>("agv_task", lst);
@@ -181,7 +196,8 @@
            .WithIdentity(model.Title, model.AGV_No)
            .UsingJobData("url",appState.SelectedModel.url)
            .UsingJobData("target",model.TargetName)
-           .Build();
+           .UsingJobData("after", model.AfterTask ? null : JsonSerializer.Serialize(start_point))
+            .Build();
           
             triggerKey = new TriggerKey(model.Title);
             // Trigger the job to run now, and then repeat every 10 seconds
@@ -232,6 +248,7 @@
                     if(scheduler==null)
                        scheduler = await _iSchedulerFactory.GetScheduler();
                     await scheduler.UnscheduleJob(triggerKey);
+                    appState.SetModel(appState.SelectedModel, ActionType.CANCEL);
                     StateHasChanged();
                 }
 
