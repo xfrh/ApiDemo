@@ -14,6 +14,12 @@ namespace ApiDemoApp.Models
         [Required]
         public string url { get; set; }
 
+        public string cur_target { get; set; }
 
+        public AGVSpeed SelectedAGVSpeed { get; set; }
+
+        public List<Coordinace> DrawCoordinates { get; set; }
+
+        public Queue<string> routes { get; set; }
     }
 }

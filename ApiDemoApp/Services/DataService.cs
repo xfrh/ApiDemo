@@ -210,6 +210,44 @@ namespace ApiDemoApp.Services
         }
 
 
+        public async Task<string> TestNext()
+        {
+        
+            var client = _client.CreateClient();
+          
+            try
+            {
+                try
+                {
+                    string call_url = Base_URL + "/cmd/next";
+                    var httpResponse = await client.PostAsync(call_url, null);
+                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        return "";
+                    }
+                    else
+                    {
+                        string statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                        LogService.LogMessage(statusMessage);
+                        return statusMessage;
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    LogService.LogMessage(ex.Message);
+                    return ex.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+
+            }
+            return "";
+        }
+
         public async Task<string> StartNavByTargetName(TargetName pointname)
         {
             //  var client = _client.CreateClient("cmd");
@@ -283,6 +321,58 @@ namespace ApiDemoApp.Services
             try
             {
                 string call_url = Base_URL + "/cmd/cancel_goal";
+                var httpResponse = await client.PostAsync(call_url, null);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                    string statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(statusMessage);
+                    return statusMessage;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+        }
+
+        public async Task<string> ResumeNav()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/resume_nav";
+                var httpResponse = await client.PostAsync(call_url, null);
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    return "";
+                }
+                else
+                {
+                    string statusMessage = await httpResponse.Content.ReadAsStringAsync();
+                    LogService.LogMessage(statusMessage);
+                    return statusMessage;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                LogService.LogMessage(ex.Message);
+                return ex.Message;
+            }
+        }
+
+        public async Task<string> PauseNav()
+        {
+            var client = _client.CreateClient();
+            try
+            {
+                string call_url = Base_URL + "/cmd/pause_nav";
                 var httpResponse = await client.PostAsync(call_url, null);
                 if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
                 {

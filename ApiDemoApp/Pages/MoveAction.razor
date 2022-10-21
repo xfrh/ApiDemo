@@ -10,13 +10,13 @@
     double vth = 0.0;
     private async Task StartNav()
     {
-        appState.SelectedAGVSpeed = new AGVSpeed()
+        model = appState.SelectedModel;
+        model.SelectedAGVSpeed = new AGVSpeed()
             {
-               vx = (float)this.vx,
+                vx = (float)this.vx,
                 vth = (float)this.vth
             };
-         
-        model = appState.SelectedModel;
+
         appState.SetModel(model, ActionType.MANUL);
         await this.InvokeAsync(() => this.StateHasChanged());
     }

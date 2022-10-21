@@ -21,30 +21,29 @@
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.TaskAlt" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@TaskManager">任务管理</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Map" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@MapManager">地图管理</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">用户管理</MudButton>
-         
             </MudPaper>
-            <MudSpacer/>
-          <AgvStatus />
- 
+            <MudSpacer />
+           <AGVStatus />
+         
         @if (notLogin)
         {
-               <MudTooltip Text="登录">
-            <MudIconButton Icon="@Icons.Filled.Login" Color="Color.Primary" Edge="Edge.End" aria-label="登录" Href="/login"/>
+            <MudTooltip Text="登录">
+                <MudIconButton Icon="@Icons.Filled.Login" Color="Color.Primary" Edge="Edge.End" aria-label="登录" Href="/login" />
             </MudTooltip>
         }
         else
         {
-              <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
-                  <MudTooltip Text="@login_user.EmailAddress">
-                  <MudIcon Color="Color.Dark" Icon="@Icons.Filled.Person" Size="Size.Medium" />
-                  </MudTooltip>
-             </MudAvatar>
-             <MudTooltip Text="退出登录">
-            <MudIconButton Icon="@Icons.Filled.Logout" Color="Color.Primary" Edge="Edge.End" aria-label="退出" Href="/logout"/>
-           </MudTooltip>
+            <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
+                <MudTooltip Text="@login_user.EmailAddress">
+                    <MudIcon Color="Color.Dark" Icon="@Icons.Filled.Person" Size="Size.Medium" />
+                </MudTooltip>
+            </MudAvatar>
+            <MudTooltip Text="退出登录">
+                <MudIconButton Icon="@Icons.Filled.Logout" Color="Color.Primary" Edge="Edge.End" aria-label="退出" Href="/logout" />
+            </MudTooltip>
         }
-       
-       
+
+
 
     </MudAppBar>
   
@@ -84,7 +83,7 @@
     bool _drawerOpen = false;
     bool openRight = false;
     bool notLogin = true;
-     bool targetPoint_Nav = true;
+    bool targetPoint_Nav = true;
 
     RegisterAGVFrom model;
     User login_user;
@@ -127,7 +126,7 @@
         _drawerOpen = !_drawerOpen;
     }
 
-  
+
 
     void CancelNav()
     {
@@ -141,7 +140,8 @@
     void NavCharge()
     {
         if (appState.SelectedModel == null) return;
-        appState.SetModel(model,ActionType.CHARGE);
+        appState.SetModel(model,ActionType.COMPLETE);
+        ToggleRightDrawer();
         StateHasChanged();
     }
 
@@ -189,7 +189,7 @@
     void ToggleRightDrawer2()
     {
         if (appState.SelectedModel == null) return;
-        appState.DrawCoordinates.Clear();
+        appState.SelectedModel.DrawCoordinates.Clear();
         targetPoint_Nav = false;
         openRight = !openRight;
     }

@@ -242,13 +242,13 @@
                         await localStorage.RemoveItemAsync("agv_task");
                     else
                         await localStorage.SetItemAsync<List<AGVTaskModel>>("agv_task", lst);
-                    appState.SetModel(appState.SelectedModel, ActionType.ADDTASK);
+                 
                     if (triggerKey == null) 
-                    triggerKey = new TriggerKey(q.Title);
+                      triggerKey = new TriggerKey(q.Title);
                     if(scheduler==null)
                        scheduler = await _iSchedulerFactory.GetScheduler();
                     await scheduler.UnscheduleJob(triggerKey);
-                    appState.SetModel(appState.SelectedModel, ActionType.CANCEL);
+                    appState.SetModel(appState.SelectedModel, ActionType.ADDTASK);
                     StateHasChanged();
                 }
 

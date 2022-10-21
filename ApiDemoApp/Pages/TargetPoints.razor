@@ -13,9 +13,10 @@
         <MudTextField @bind-Value="searchString" Placeholder="导航顺序" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.Route" IconSize="Size.Medium" Class="mt-0" ReadOnly="true"></MudTextField>
     </ToolBarContent>
     <HeaderContent>
-        <MudTh><MudCheckBox Label="全选" @bind-Checked="@All_Checked" @onclick="ToggleSelectAll" Disabled="@isAllChecked" /></MudTh>
+        <MudTh><MudCheckBox Label="全选" @bind-Checked="@All_Checked" @onclick="ToggleSelectAll" Disabled="@isAllChecked" /></MudTh>     
+        @*<MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" OnClick="@TestNext">test next</MudButton>*@
         <MudTh><MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.ElectricalServices" IconColor="Color.Inherit" Size="Size.Small" @onclick="NavCharge" Disabled="@isCharge">充电</MudButton></MudTh>
-        <MudTh><MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Navigation" IconColor="Color.Inherit" Size="Size.Small" @onclick="StartNav" Disabled="@isNaved"> 导航</MudButton></MudTh>
+        <MudTh><MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Navigation" IconColor="Color.Inherit" Size="Size.Small" @onclick="StartNav" Disabled="@isNaved">导航</MudButton></MudTh>
         <MudTh><MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.CancelScheduleSend" IconColor="Color.Inherit" Size="Size.Small" @onclick="CancelNav" Disabled="@isCancelled">取消</MudButton></MudTh>
       
     </HeaderContent>
@@ -23,7 +24,7 @@
         <MudTd><MudCheckBox @bind-Checked="@context.isChecked" @onclick="@(()=>Edit(@context.name))" Disabled="@context.isCheckable">@context.name</MudCheckBox></MudTd>
         <MudTd DataLabel="坐标">@string.Format("{0:N2}", @context.coordinace.x) @string.Format("{0:N2}", @context.coordinace.y) @string.Format("{0:N2}", @context.coordinace.theta)</MudTd>
         <MudTd DataLabel="">
-            <MudFab @onclick="@(()=>Start(@context.name))" Color="Color.Primary" Icon="@Icons.Filled.NotStarted" Size="Size.Small" IconSize="Size.Small" Title="开始"  Disabled="context.isStarted"/>
+            <MudFab @onclick="@(()=>Resume(@context.name))" Color="Color.Primary" Icon="@Icons.Filled.NotStarted" Size="Size.Small" IconSize="Size.Small" Title="开始"  Disabled="context.isStarted"/>
          </MudTd>
         <MudTd>
             <MudFab @onclick="@(()=>Pause(@context.name))" Color="Color.Primary" Icon="@Icons.Filled.PauseCircleFilled" Size="Size.Small" IconSize="Size.Small" Title="暂停" Disabled="context.isPaused" />
@@ -42,17 +43,47 @@
     bool isCharge;
     bool isAllChecked;
     public bool All_Checked { get; set; } = false;
-    Queue<string> routes = new Queue<string>();
+
+
 
     protected override async Task OnInitializedAsync()
     {
         if (appState.SelectedModel != null)
             lst = await dataService.Target_Points();
-        isNaved=false;
-        isCharge = false;
-        isCancelled = true;
+        InitUiComponets();
         appState.OnChange += ReceiveData;
     }
+
+    async void TestNext()
+    {
+        await dataService.TestNext();
+
+    }
+    public async void ReceiveData()
+    {
+        if (appState.SelectedModel != null)
+        {
+            if (appState.SelectedType == ActionType.SELECTED)
+            {
+                lst = await dataService.Target_Points();
+                StateHasChanged();
+            }
+            else if(appState.SelectedType==ActionType.COMPLETE){
+                if(appState.SelectedModel.routes.Count>0){
+                    appState.SelectedModel.cur_target = appState.SelectedModel.routes.Dequeue();
+                    appState.SetModel(appState.SelectedModel, ActionType.NAVIGATE);
+                    NavUiComponets();
+                }
+                else{
+                    appState.SelectedModel.cur_target = "";
+                    InitUiComponets();
+
+                }
+
+            }
+        }
+    }
+
     public void Dispose()
     {
         appState.OnChange -= ReceiveData;
@@ -67,68 +98,75 @@
             temp += item.name + " ";
         }
         searchString = !All_Checked? temp : "";
+        StateHasChanged();
     }
-    public async void ReceiveData()
-    {
-        if (appState.SelectedModel != null)
-        {
-            if (appState.SelectedType == ActionType.SELECTED)
-            {
-                lst = await dataService.Target_Points();
 
-            }
-            else if(appState.SelectedType==ActionType.NAVIGATE){
-                isCharge = true;
-                isNaved = true;
-                isCancelled = false;
-                isAllChecked = true;
-
-            }
-            else if(appState.SelectedType==ActionType.CANCEL){
-                searchString = "";
-                routes.Clear();
-                isNaved = false;
-                isCharge = false;
-                isCancelled = true;
-                isAllChecked = false;
-                foreach (var item in lst){
-                    item.isChecked = false;
-                    item.isPaused=true;
-                    item.isStarted=false;
-                    item.isCheckable = false;
-                }
-
-            }
-            else if(appState.SelectedType==ActionType.CHARGE){
-                isNaved = true;
-                isCharge = true;
-                isCancelled = false;
-                isAllChecked = true;
-                foreach (var item in lst)
-                {
-                    item.isChecked = false;
-                    item.isPaused = true;
-                    item.isStarted = true;
-                    item.isCheckable = true;
-                }
-
-            }
-            else if(appState.SelectedType==ActionType.COMPLETE){
-                if(routes.Count>0){
-                    string number =routes.Dequeue();
-                    Start(number);
-                }
-                else{
-                    isNaved = false;
-                    isCharge = false;
-                    isCancelled = true;
-
-                }
-            }
-
-            await this.InvokeAsync(() => this.StateHasChanged());
+    async void InitUiComponets(){
+        searchString="";
+        isAllChecked=false;
+        All_Checked=false;
+        isNaved = false;
+        isCharge = false;
+        isCancelled = true;
+        foreach(var item in lst){
+            item.isCheckable=false;
+            item.isChecked = false;
+            item.isPaused=true;
+            item.isStarted = true;
         }
+        await InvokeAsync(StateHasChanged);
     }
+    async void NavUiComponets(){
+        isAllChecked = true;
+        isNaved = true;
+        isCharge = true;
+        isCancelled = false;
+        foreach(var item in lst){
+            item.isCheckable=true;
+            if(item.isChecked && item.name.Trim()==appState.SelectedModel.cur_target){
+                item.isStarted=true;
+                item.isPaused = false;
+            }
+            else{
+                item.isStarted=true;
+                item.isPaused = true;
+            }
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async void  ToggleSelected(bool toggleall=true){
+
+        foreach(var item in lst){
+            if (item.isChecked && item.name.Trim() == appState.SelectedModel.cur_target)
+            {
+                item.isPaused = !item.isPaused;
+            }
+            else
+                item.isPaused = true;
+
+            item.isCheckable = !item.isCheckable;
+        }
+        if(toggleall){
+            isCharge = !isCharge;
+            isNaved = !isNaved;
+            isCancelled = !isCancelled;
+            isAllChecked = !isAllChecked;
+
+        }
+
+        await InvokeAsync(StateHasChanged); 
+    }
+
+    async void RemoveChecked(){
+        foreach (var item in lst)
+        {
+            if (item.isChecked)
+                item.isChecked = false;
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
 
     private void Edit(string name)
     {
@@ -142,74 +180,74 @@
     }
 
 
-    public void Start(string name)
+    public void Resume(string name)
     {
-        if(appState.SelectedModel==null) return;
-        foreach(var item in lst){
-            item.isStarted = true;
-            item.isPaused = true;
-            item.isCheckable = true;
-        }
-
-        target = lst.FirstOrDefault(c => c.name.Trim()  == name.Trim());
-        if (target != null){
-            target.isChecked = true;
+        target = lst.FirstOrDefault(c => c.name.Trim() == name.Trim());
+        if(target!=null){
+            appState.SelectedModel.routes.Enqueue(target.name);
+            appState.SetModel(appState.SelectedModel, ActionType.RESUME);
             target.isStarted = true;
             target.isPaused = false;
-          
-            appState.Nav_Coordiance = target.coordinace;
-            appState.SetModel(appState.SelectedModel, ActionType.NAVIGATE);
-
+            StateHasChanged();
         }
-        isCharge=true;
-        isNaved = true;
-        isCancelled=false;
 
-        StateHasChanged();
+
     }
 
     void NavCharge()
     {
         if (appState.SelectedModel == null) return;
+        appState.SelectedModel.cur_target="";
+        appState.SelectedModel.routes.Clear();
+        appState.SelectedModel.routes.Enqueue("充电桩");
+        var q=lst.FirstOrDefault(v=>v.name=="充电桩");
+        if (q != null)
+            q.isChecked = true;
+        appState.SelectedModel.cur_target = appState.SelectedModel.routes.Dequeue();
         appState.SetModel(appState.SelectedModel, ActionType.CHARGE);
-        StateHasChanged();
+        NavUiComponets();  
+
     }
 
     public void Pause(string name)
     {
         if (appState.SelectedModel == null) return;
+
         target = lst.FirstOrDefault(c => c.name.Trim() == name.Trim());
         if (target != null)
         {
+            if(target.isChecked){
+                appState.SetModel(appState.SelectedModel, ActionType.PAUSE);
+                target.isStarted = false;
+                target.isPaused = true;
+                StateHasChanged();
+            }
 
-            target.isChecked = false;
-            target.isPaused = true;
-            target.isStarted = false;
-            appState.SetModel(appState.SelectedModel, ActionType.CANCEL);
-            StateHasChanged();
+
         }
     }
     void StartNav(){
-        routes.Clear();
         if (string.IsNullOrEmpty(searchString)) return;
+        appState.SelectedModel.routes.Clear();
+        appState.SelectedModel.DrawCoordinates.Clear();
         string[] targets = searchString.Split(" ");
 
         for(int i=0; i<targets.Length; i++){
             var name = targets[i].Trim();
             if(!string.IsNullOrEmpty(name))
-                routes.Enqueue(name);
+                appState.SelectedModel.routes.Enqueue(name);
         }
-        if(routes.Count>0){
-            string number = routes.Dequeue();
-            Start(number);
-        }
-       
+        appState.SelectedModel.cur_target = appState.SelectedModel.routes.Dequeue();
+        appState.SetModel(appState.SelectedModel, ActionType.NAVIGATE);
+        NavUiComponets();
     }
 
     void CancelNav(){
         if (appState.SelectedModel == null) return;
         appState.SetModel(appState.SelectedModel, ActionType.CANCEL);
-       
+        InitUiComponets();
+
+
     }
    
 

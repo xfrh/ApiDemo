@@ -6,10 +6,7 @@ namespace ApiDemoApp.Services
     {
         public RegisterAGVFrom SelectedModel { get; set; }
         public ActionType SelectedType { get; private set; }
-        public AGVSpeed SelectedAGVSpeed { get; set; }
-        public Coordinace Nav_Coordiance { get; set; }
-       public List<Coordinace> DrawCoordinates { get; set; } = new List<Coordinace>();
-
+      
         public event Action OnChange;
 
         public void SetModel(RegisterAGVFrom model,ActionType type)
@@ -36,6 +33,7 @@ namespace ApiDemoApp.Services
         STOPPED,
         ADDTASK,
         PAUSE,
+        RESUME,
         COMPLETE,
     }
 }

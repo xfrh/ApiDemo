@@ -1,6 +1,7 @@
 ﻿
 using ApiDemoApp.Models;
 using Quartz;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.Json;
 
@@ -53,27 +54,38 @@ namespace ApiDemoApp.Services
            
         }
 
+        public async Task<int> Report_Progress()
+        {
+            while (moveStatus.status != 1)
+            {
+                moveStatus = await Cur_Status();
+                if (moveStatus.status == 2) break;
+                Thread.Sleep(500);
+            }
+            while (moveStatus.status == 1)
+            {
+                moveStatus = await Cur_Status();
+                if (moveStatus.status == 2) break;
+                Thread.Sleep(500);
+            }
+            return moveStatus.status;
+
+        }
+
         public async Task ExecuteTask()
         {
             while (routes.Count > 0)
             {
-                moveStatus = await Cur_Status();
-                switch (moveStatus.status)
-                {
-                    case 0:
-                    case 3:
-                            string number = routes.Dequeue();
-                            await StartNav(new TargetName() { point = number });
+                string number = routes.Dequeue();
+                await StartNav(new TargetName() { point = number });
+                int t_no = await Report_Progress();
+                if (t_no == 3)
+                    await ExecuteTask();
+                else
                     break;
-                    case 2:
-                    case 4:
-                        routes.Clear();
-                    break;
-                }
-                Thread.Sleep(2000);
             }
-            if(routes.Count==0 && after_target != null)
-            {
+            if (routes.Count == 0 && after_target != null)
+             {
                 Coordinace coordinace = JsonSerializer.Deserialize<Coordinace>(after_target);
                 await StartNav(coordinace);
             }
@@ -137,7 +149,8 @@ namespace ApiDemoApp.Services
             {
                  using (var client = new HttpClient())
                 {
-                    string call_url = Base_URL + pointname.point == "充电桩"? "/cmd/charge" : "/cmd/nav_point";
+                    string target_url = pointname.point == "充电桩" ? "/cmd/charge" : "/cmd/nav_point";
+                    string call_url = Base_URL + target_url;
                     var stringPayload = pointname.point == "充电桩" ? JsonSerializer.Serialize(charge) : JsonSerializer.Serialize(pointname);
                     var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
                     var httpResponse = await client.PostAsync(call_url, httpContent);

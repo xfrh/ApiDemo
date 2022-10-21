@@ -9,51 +9,50 @@
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject ISchedulerFactory _iSchedulerFactory
 @implements IDisposable
-     <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
-     @if(appState.SelectedModel== null){
+<MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
+    @if (appState.SelectedModel == null)
+    {
         <MudText Typo="Typo.subtitle2">还未选择机器人</MudText>
     }
-    else{
-        @if(lst!=null && lst.Count>0){
+    else
+    {
+
+        @if (lst != null && lst.Count > 0)
+        {
             <MudTooltip Text=@cur_time>
-            <MudAvatar Color="Color.Surface" Variant="Variant.Filled">
-                <MudIcon Color="Color.Dark" Icon="@Icons.Outlined.Timer" Size="Size.Small" />
-            </MudAvatar>
-           </MudTooltip>
-          
-         }
+                <MudAvatar Color="Color.Surface" Variant="Variant.Filled">
+                    <MudIcon Color="Color.Dark" Icon="@Icons.Outlined.Timer" Size="Size.Small" />
+                </MudAvatar>
+            </MudTooltip>
+
+        }
 
         <MudTooltip Text=@cur_Battery>
-          <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+            <MudAvatar Color="Color.Success" Variant="Variant.Filled">
                 <MudIcon Color="Color.Dark" Icon="@Icons.Filled.BatteryAlert" Size="Size.Small" />
-                </MudAvatar>
+            </MudAvatar>
         </MudTooltip>
         <MudTooltip Text=@cur_Speed>
             <MudAvatar Color="Color.Secondary" Variant="Variant.Filled">
                 <MudIcon Color="Color.Dark" Icon="@Icons.Filled.Speed" Size="Size.Small" />
-        </MudAvatar>
-       </MudTooltip>
+            </MudAvatar>
+        </MudTooltip>
         <MudTooltip Text=@cur_Position>
             <MudAvatar Color="Color.Info" Variant="Variant.Filled">
                 <MudIcon Color="Color.Dark" Icon="@Icons.Filled.LocationOn" Size="Size.Small" />
-        </MudAvatar>
-       </MudTooltip>
+            </MudAvatar>
+        </MudTooltip>
 
-          <MudTooltip Text=@model.type>
+        <MudTooltip Text=@agv_info>
             <MudAvatar Color="Color.Tertiary" Variant="Variant.Filled">
                 <MudIcon Color="Color.Dark" Icon="@Icons.Filled.Info" Size="Size.Small" />
             </MudAvatar>
         </MudTooltip>
-         
-         
-     }
+    }
 
-  
-  
-     </MudPaper>
-
+</MudPaper>
 @code {
-    RegisterAGVFrom model;
+
     Battery battery;
     MoveStatus moveStatus;
     Coordinace coordinace;
@@ -62,26 +61,29 @@
     string cur_Battery;
     string cur_Speed;
     string cur_time;
+    string agv_info;
+    string temp_target;
     List<AGVTaskModel> lst;
+
     protected override void OnInitialized()
     {
-        model = appState.SelectedModel;
-        cur_time = DateTime.Now.ToString("HH:mm");
         appState.OnChange += ReceivedModel;
-        if (model != null)
-            MyTask();
     }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if(firstRender){
+        if (firstRender)
+        {
             lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
             var agv_lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
-            if(lst!=null && lst.Count>0){
-                if(appState.SelectedModel==null)
+            if (lst != null && lst.Count > 0)
+            {
+                if (appState.SelectedModel == null)
                 {
-                    foreach (var model in lst){
+                    foreach (var model in lst)
+                    {
                         var url = agv_lst.FirstOrDefault(v => v.name == model.AGV_No).url;
-                        await AddToSchedule(model,url);
+                        await AddToSchedule(model, url);
                     }
 
                 }
@@ -91,16 +93,16 @@
 
     }
 
-    private async Task AddToSchedule(AGVTaskModel model,string url)
+    private async Task AddToSchedule(AGVTaskModel model, string url)
     {
         try
         {
-            dataService.Base_URL ="http://" + url;
+            dataService.Base_URL = "http://" + url;
             Coordinace start_point = await dataService.Cur_Position();
             var scheduler = await _iSchedulerFactory.GetScheduler();
             IJobDetail job = JobBuilder.Create<ScheduleJobService>()
            .WithIdentity(model.Title, model.AGV_No)
-           .UsingJobData("url",url)
+           .UsingJobData("url", url)
            .UsingJobData("target", model.TargetName)
            .UsingJobData("after", model.AfterTask ? null : JsonSerializer.Serialize(start_point))
            .Build();
@@ -184,17 +186,22 @@
 
     private async Task MyTask()
     {
-        model = appState.SelectedModel;
+
+        cur_time = DateTime.Now.ToString("HH:mm");
+        agv_info = appState.SelectedModel.name + ":" + appState.SelectedModel.type;
         moveStatus = await dataService.Cur_Status();
         coordinace = await dataService.Cur_Position();
         battery = await dataService.Battery_Status();
         aGVSpeed = await dataService.Speed();
-
-        if(coordinace!=null)
-            cur_Position =  "位置坐标: "  + string.Format("{0:N2}", coordinace.x) + " " + string.Format("{0:N2}", coordinace.y) +  " " + string.Format("{0:N2}", coordinace.theta);
-        if (battery != null){
+        if (coordinace != null)
+            cur_Position = "位置坐标: " + string.Format("{0:N2}", coordinace.x) + " " + string.Format("{0:N2}", coordinace.y) + " " + string.Format("{0:N2}", coordinace.theta);
+        if (battery != null)
+        {
             cur_Battery = "电量:" + battery.battery.ToString() + "%,";
-            switch(battery.chargeFlag){
+            if (battery.battery < 20)
+                cur_Battery += "电量过低，需要充电";
+            switch (battery.chargeFlag)
+            {
                 case 2:
                     cur_Battery += "正在充电桩充电";
                     break;
@@ -208,35 +215,65 @@
                     cur_Battery += "非充电";
                     break;
             }
-            switch(battery.emergencyButton){
+            switch (battery.emergencyButton)
+            {
                 case 0:
                     cur_Battery += ",急停开关按下";
                     break;
                 case 1:
-                    cur_Battery +=",急停开关谈起";
+                    cur_Battery += ",急停开关谈起";
                     break;
             }
 
         }
-        if(aGVSpeed!=null){
+        if (aGVSpeed != null)
+        {
             cur_Speed = "线速度:" + aGVSpeed.vx.ToString() + ",角速度:" + aGVSpeed.vth;
         }
 
+        if (moveStatus.status == 1)
+        {
+            if (coordinace != null)
+                appState.SelectedModel.DrawCoordinates.Add(coordinace);
+            if (appState.SelectedModel.DrawCoordinates.Count > 1)
+                appState.SetModel(appState.SelectedModel, ActionType.STOPPED);
 
-        await this.InvokeAsync(() => this.StateHasChanged());
+        }
 
+        StateHasChanged();
     }
 
-    public bool isBatteryInCharge(){
+    public bool isBatteryInCharge()
+    {
         return battery.chargeFlag == 2;
     }
 
-    public bool isStopBtnPressed(){
+    public bool isStopBtnPressed()
+    {
         return battery.emergencyButton == 0;
     }
 
-    public bool isNavigate(){
+    public bool isNavigate()
+    {
         return moveStatus.status == 1;
+    }
+
+    async void Report_Progress()
+    {
+        while (moveStatus.status != 1)
+        {
+            await MyTask();
+            if (moveStatus.status == 2) break;
+            Thread.Sleep(1000);
+        }
+        while (moveStatus.status == 1)
+        {
+            await MyTask();
+            if (moveStatus.status == 2) break;
+            Thread.Sleep(1000);
+        }
+        if (moveStatus.status == 3)
+            appState.SetModel(appState.SelectedModel, ActionType.COMPLETE);
     }
 
     public async void ReceivedModel()
@@ -246,121 +283,44 @@
             switch (appState.SelectedType)
             {
                 case ActionType.SELECTED:
-                    ShowSanckBar(appState.SelectedModel.name + "开始工作");
                     await MyTask();
-                    await this.InvokeAsync(() => this.StateHasChanged());
+                    agv_info = appState.SelectedModel.name + "," + appState.SelectedModel.type;
+                    ShowSanckBar(appState.SelectedModel.name + "开始工作");
                     break;
                 case ActionType.NAVIGATE:
-                    await MyTask();
-                    //if(isBatteryInCharge()){
-
-                    //    ShowSanckBar("正在充电中");
-                    //    return;
-                    //}
-                    if(isStopBtnPressed()){
-                        ShowSanckBar("急停开关打开了");
-                        return;
-                    }
-                    await dataService.StartNav(appState.Nav_Coordiance);
-                    ShowSanckBar("导航开始");
-                    appState.DrawCoordinates.Clear();
-                    while(moveStatus.status!=1)
-                        await MyTask();
-                    while (moveStatus.status == 1)
-                    {
-                        appState.DrawCoordinates.Add(coordinace);
-                        await MyTask();
-                        if (moveStatus.status != 1)
-                        {
-                            if (moveStatus.status == 3){
-                                ShowSanckBar("导航完成");
-                                appState.SetModel(model, ActionType.COMPLETE);
-                            }
-                            else if (moveStatus.status == 2){
-                                ShowSanckBar("导航被取消");
-                                appState.SetModel(model, ActionType.CANCEL);
-                            }
-
-                            break;
-                        }
-
-                        appState.SetModel(model, ActionType.STOPPED);
-                        await this.InvokeAsync(() => this.StateHasChanged());
-
-                        Thread.Sleep(1000);
-                    }
-
-
+                    await dataService.StartNavByTargetName(new TargetName() { point = appState.SelectedModel.cur_target });
+                    Report_Progress();
+                    break;
+                case ActionType.RESUME:
+                    await dataService.ResumeNav();
+                    ShowSanckBar("导航正在被恢复...");
+                    Report_Progress();
                     break;
                 case ActionType.CANCEL:
                     await dataService.CancelNav();
                     ShowSanckBar("导航被取消");
-                 
                     break;
-
-
+                case ActionType.PAUSE:
+                    await dataService.CancelNav();
+                    ShowSanckBar("导航被暂停");
+                    break;
+                case ActionType.COMPLETE:
+                    ShowSanckBar(appState.SelectedModel.cur_target + " 导航完成");
+                    break;
                 case ActionType.CHARGE:
-                    await MyTask();
-                    if (isStopBtnPressed())
-                    {
-                        ShowSanckBar("急停开关打开了");
-                        return;
-                    }
                     await dataService.NavCharge();
-                    ShowSanckBar("正在去充电");
-                    appState.DrawCoordinates.Clear();
-                    while(battery.chargeFlag!=2){
-                        appState.DrawCoordinates.Add(coordinace);
-                        await MyTask();
-                        if(battery.chargeFlag==8){
-                            ShowSanckBar("正在对接充电桩");
-                        }
-                        else if(battery.chargeFlag==2){
-                            ShowSanckBar("开始充电");
-                        }
-                        if(moveStatus.status==1){
-                            appState.SetModel(model, ActionType.STOPPED);
-                            await this.InvokeAsync(() => this.StateHasChanged());
-
-                        }
-                        else if (moveStatus.status == 4)
-                        {
-                            ShowSanckBar("充电被取消");
-                            break;
-                        }
-
-                        Thread.Sleep(1000);
-
-                    }
+                    ShowSanckBar("开始导航充电");
+                    Report_Progress();
                     break;
-                case ActionType.MANUL:
-                    await MyTask();
-                    //if (isBatteryInCharge())
-                    //{
-
-                    //    ShowSanckBar("正在充电中");
-                    //    return;
-                    //}
-                    if (isStopBtnPressed())
-                    {
-                        ShowSanckBar("急停开关打开了");
-                        return;
-                    }
-                    await dataService.ManuMoveCar(appState.SelectedAGVSpeed);
-                    appState.DrawCoordinates.Add(coordinace);
-                    if(appState.DrawCoordinates.Count>=2){
-                        appState.SetModel(model, ActionType.STOPPED);
-                        await this.InvokeAsync(() => this.StateHasChanged());
-                    }
-                    break;
-
                 case ActionType.ADDTASK:
                     lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
+                    await MyTask();
                     await this.InvokeAsync(() => this.StateHasChanged());
                     break;
 
 
             }
         }
+
     }
 }

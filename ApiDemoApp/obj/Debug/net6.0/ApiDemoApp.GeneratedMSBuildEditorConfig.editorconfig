@@ -39,8 +39,8 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQUdWUG9pbnRzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AgvStatus.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWd2U3RhdHVzLnJhem9y
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AGVStatus.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQUdWU3RhdHVzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AGVTask.razor]

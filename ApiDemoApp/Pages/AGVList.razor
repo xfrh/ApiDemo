@@ -64,16 +64,19 @@
 
     }
 
-  
+
 
 
     private void OnSelectedItemChanged(MudListItem item)
     {
         _selectedItem = item;
-         RegisterAGVFrom _model =new RegisterAGVFrom();
+        RegisterAGVFrom _model =new RegisterAGVFrom();
         _model.name = _selectedItem.Text;
         _model.url = _selectedItem.Value.ToString();
         _model.type = _selectedItem.Tag.ToString();
+        _model.DrawCoordinates = new List<Coordinace>();
+        _model.SelectedAGVSpeed = new AGVSpeed();
+        _model.routes = new Queue<string>();
         dataService.Base_URL = "http://" + _model.url;
         appState.SetModel(_model,ActionType.SELECTED);
         StateHasChanged();
