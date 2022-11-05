@@ -21,9 +21,8 @@
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.TaskAlt" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@TaskManager">任务管理</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Map" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@MapManager">地图管理</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" Disabled="@notLogin" OnClick="@UserManager">用户管理</MudButton>
+            <AGVStatus />
             </MudPaper>
-            <MudSpacer />
-           <AGVStatus />
          
         @if (notLogin)
         {
@@ -48,7 +47,7 @@
     </MudAppBar>
   
  
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="@DrawerVariant.Persistent">
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="@DrawerVariant.Persistent" Width="300px">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6" Class="mt-1">AGV 列表</MudText>
         </MudDrawerHeader>
@@ -56,7 +55,7 @@
        <AGVList/>
     </MudDrawer>
    
-    <MudDrawer @bind-Open="@openRight" Fixed="false" Anchor="Anchor.Right" Elevation="2" Variant="@DrawerVariant.Temporary" Height="800px" Width="500px">
+    <MudDrawer @bind-Open="@openRight" Fixed="false" Anchor="Anchor.Right" Elevation="2" Variant="@DrawerVariant.Temporary" Height="800px" Width="@drawerWidth">
            
             @if(targetPoint_Nav){
                  <MudDrawerHeader>
@@ -66,17 +65,16 @@
             }
             else{
                   <MudDrawerHeader>
-                  <MudText Typo="Typo.h6">手动导航</MudText>
+                  <MudText Typo="Typo.h6">移动小车</MudText>
                   </MudDrawerHeader>
                    <MoveAction />
             }
                
         </MudDrawer>
-    
-  
+
     <MudMainContent>
-        @Body
-    </MudMainContent>
+                    @Body
+      </MudMainContent>
 </MudLayout>
 @code {
     [Inject] private IDialogService DialogService { get; set; }
@@ -84,7 +82,7 @@
     bool openRight = false;
     bool notLogin = true;
     bool targetPoint_Nav = true;
-
+    string drawerWidth;
     RegisterAGVFrom model;
     User login_user;
     protected override void OnInitialized()
@@ -149,21 +147,21 @@
     void UserManager()
     {
         // appState.SelectedModel = null;
-        _navigationManager.NavigateTo("/usermanager",true);
+        _navigationManager.NavigateTo("/usermanager",false);
     }
 
     void MapManager()
     {
         if (appState.SelectedModel == null) return;
-        _navigationManager.NavigateTo("/mapmanager", true);
+        _navigationManager.NavigateTo("/mapmanager", false);
     }
 
     void TaskManager()
     {
         if (appState.SelectedModel == null) return;
-        _navigationManager.NavigateTo("/taskmanager",true);
+        _navigationManager.NavigateTo("/taskmanager");
     }
-   
+
     public void ReceivedModel()
     {
         if (appState.SelectedModel != null)
@@ -183,6 +181,7 @@
     {
         if (appState.SelectedModel == null) return;
         targetPoint_Nav = true;
+        drawerWidth = "500px";
         openRight = !openRight;
     }
 
@@ -191,6 +190,7 @@
         if (appState.SelectedModel == null) return;
         appState.SelectedModel.DrawCoordinates.Clear();
         targetPoint_Nav = false;
+        drawerWidth = "300px";
         openRight = !openRight;
     }
     

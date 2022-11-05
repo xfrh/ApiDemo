@@ -2,23 +2,23 @@
 @using ApiDemoApp.Models
 @using ApiDemoApp.Services
 @inject AppState appState
-@inject DataService dataService
+
 @inject NavigationManager _navigationManager
 @implements IDisposable;
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 <MudPaper Class="pa-4 mr-16" Elevation="0">
 
-<MudList  Clickable=true  SelectedItem="_selectedItem" SelectedItemChanged="OnSelectedItemChanged" >
+    <MudList Clickable=true  >
         @foreach(var model in lst)
         {
-              <MudListItem   Avatar="@Icons.Material.Filled.Image"  Value=@model.url Text=@model.name Tag=@model.type />
+            <MudListItem Avatar="@Icons.Material.Filled.Image" Value=@model.url Text=@model.name Tag=@model.type OnClick="()=>ItemSelected(model)" />
         }
   </MudList>
 </MudPaper>
 
 @code {
     List<RegisterAGVFrom> lst =new List<RegisterAGVFrom>();
-    MudListItem _selectedItem;
+
 
     protected override void OnInitialized()
     {
@@ -33,16 +33,18 @@
             if (lst == null)
                 lst = new List<RegisterAGVFrom>();
             StateHasChanged();
+
         }
 
     }
+
 
     public void Dispose()
     {
         appState.OnChange -= ReceiveData;
     }
 
-    public void ReceiveData()
+    public async void ReceiveData()
     {
         if (appState.SelectedModel != null) {
             if (appState.SelectedType == ActionType.ADD)
@@ -58,29 +60,37 @@
                     lst.Remove(q);
                 StateHasChanged();
             }
+          
 
         }
 
 
     }
 
-
-
-
-    private void OnSelectedItemChanged(MudListItem item)
+    async void ItemSelected(RegisterAGVFrom _model)
     {
-        _selectedItem = item;
-        RegisterAGVFrom _model =new RegisterAGVFrom();
-        _model.name = _selectedItem.Text;
-        _model.url = _selectedItem.Value.ToString();
-        _model.type = _selectedItem.Tag.ToString();
+        HttpService.Base_URL = "http://" + _model.url;
         _model.DrawCoordinates = new List<Coordinace>();
-        _model.SelectedAGVSpeed = new AGVSpeed();
         _model.routes = new Queue<string>();
-        dataService.Base_URL = "http://" + _model.url;
-        appState.SetModel(_model,ActionType.SELECTED);
-        StateHasChanged();
+        appState.SetModel(_model, ActionType.SELECTED);
         _navigationManager.NavigateTo("/map");
     }
+
+
+    //private async void OnSelectedItemChanged(MudListItem item)
+    //{
+    //    _selectedItem = item;
+    //    RegisterAGVFrom _model =new RegisterAGVFrom();
+    //    _model.name = _selectedItem.Text;
+    //    _model.url = _selectedItem.Value.ToString();
+    //    _model.type = _selectedItem.Tag.ToString();
+    //    _model.DrawCoordinates = new List<Coordinace>();
+    //    _model.SelectedAGVSpeed = new AGVSpeed();
+    //    _model.routes = new Queue<string>();
+
+        
+       
+
+    //}
 
 }

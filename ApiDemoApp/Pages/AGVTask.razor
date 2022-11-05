@@ -11,11 +11,10 @@
 @using System.Text.Json
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 @inject ApiDemoApp.Services.AppState appState
-@inject DataService dataService
-@inject ISchedulerFactory _iSchedulerFactory
+
 <MudGrid Class="pa-4 mt-16"  >
     <MudItem xs="12" sm="5"  >
-        <EditForm Model="@model" OnValidSubmit="OnValidSubmit">
+        <EditForm Model="@model"  OnValidSubmit="OnValidSubmit"  >
             <DataAnnotationsValidator />
             <MudCard Outlined="true" >
                 <MudCardContent class="d-flex  flex-grow-1 gap-4">
@@ -69,7 +68,7 @@
                                 <MudSelectItem T="string" Value="@wkday">@wkday</MudSelectItem>
                             }
                         </MudSelect>
-                     
+                         <ValidationMessage For="@(() => model.WeekOptions)" />
                     </MudItem>
                        <MudItem xs="12" sm="6" md="4">
                         <MudSelect Label="目标点" MultiSelection="true" @bind-Value="target_value" @bind-SelectedValues="model.TargetOptions">
@@ -78,6 +77,7 @@
                                 <MudSelectItem Value="@target">@target</MudSelectItem>
                             }
                         </MudSelect>
+                         <ValidationMessage For="@(() => model.TargetOptions)" />
                     </MudItem>
                    
                 </MudCardContent>
@@ -85,6 +85,7 @@
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">注册</MudButton>
                 </MudCardActions>
             </MudCard>
+           
         </EditForm>
     </MudItem>
     <MudItem xs="12" sm="7">
@@ -120,11 +121,11 @@
     @code {
 
     [Inject] private IDialogService DialogService { get; set; }
-    IScheduler scheduler;
-    TriggerKey triggerKey;
+
     AGVTaskModel model = new AGVTaskModel();
     List<AGVTaskModel> lst = new List<AGVTaskModel>();
     List<string> targets = new List<string>();
+    private List<AGVProperties> lst_properties = new List<AGVProperties>();
     private bool _loading;
     AGVTaskModel _selectedItem;
     bool success;
@@ -145,15 +146,16 @@
         if (firstRender)
         {
             targets.Clear();
-            start_point = await dataService.Cur_Position();
+            start_point = await HttpService.Execute_Get("pose");
             lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
-            List<TargetPointsModel> pp = await dataService.Target_Points();
+            lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
+            List<TargetPointsModel> pp = await HttpService.Execute_Get("android_target");
             foreach (var p in pp)
                 targets.Add(p.name);
             if (lst == null)
                 lst = new List<AGVTaskModel>();
             foreach (var model in lst)
-                EditShowList(model);
+                TimeJobService.EditShowList(model);
             StateHasChanged();
         }
 
@@ -161,67 +163,63 @@
 
     private async void OnValidSubmit(EditContext context)
     {
-        if(string.IsNullOrEmpty(model.Title)) return;
+        if(string.IsNullOrEmpty(model.Title)){
+            await DialogService.ShowMessageBox(
+                 "警告",
+                 "标题不可以为空!",
+                 yesText: "OK");
+            return;
+        }
+
         var q = lst.FirstOrDefault(v=>v.Title== model.Title);
-        if(q!=null) return;
-        if(model.WeekOptions.Count()==0) return;
-        if (model.TargetOptions.Count() == 0) return;
+        if(q!=null) {
+            await DialogService.ShowMessageBox(
+                "警告",
+                "标题不可以重复!",
+                yesText: "OK");
+            return;
+        };
+
+        if(model.WeekOptions.Count()==0) {
+            await DialogService.ShowMessageBox(
+                "警告",
+                "还没有选择重复模式!",
+                yesText: "OK");
+            return;
+        }
+
+        if (model.TargetOptions.Count() == 0){
+            await DialogService.ShowMessageBox(
+              "警告",
+              "还没有选择目标点!",
+              yesText: "OK");
+            return;
+
+        }
 
         string temp = "";
         model.AGV_No = appState.SelectedModel.name;
         model.StartTime = time;
         model.TargetName="";
-       
+
         foreach(var item in model.TargetOptions){
             temp += item + ",";
         }
         model.TargetName = temp.TrimEnd(',');
-        EditShowList(model);
+        model.properties = JsonSerializer.Serialize(lst_properties);
+        TimeJobService.EditShowList(model);
         lst.Add(model);
         await localStorage.SetItemAsync<List<AGVTaskModel>>("agv_task", lst);
 
         appState.SetModel(appState.SelectedModel, ActionType.ADDTASK);
-        await AddToSchedule();
+        await TimeJobService.AddToSchedule(model,appState.SelectedModel.url);
         await this.InvokeAsync(() => this.StateHasChanged());
         model = new AGVTaskModel();
 
     }
 
-    private async Task AddToSchedule()
-    {
-        try
-        {
-            scheduler = await _iSchedulerFactory.GetScheduler();
-            IJobDetail job = JobBuilder.Create<ScheduleJobService>()
-           .WithIdentity(model.Title, model.AGV_No)
-           .UsingJobData("url",appState.SelectedModel.url)
-           .UsingJobData("target",model.TargetName)
-           .UsingJobData("after", model.AfterTask ? null : JsonSerializer.Serialize(start_point))
-            .Build();
-          
-            triggerKey = new TriggerKey(model.Title);
-            // Trigger the job to run now, and then repeat every 10 seconds
-            ITrigger trigger = TriggerBuilder.Create()
-                .WithIdentity(triggerKey)
-                .StartNow()
-                 //.WithSimpleSchedule(x => x
-                 //        .WithIntervalInSeconds(10)
-                 //        .RepeatForever())
-                 .WithCronSchedule(schedulModel) //every Wednesday at 12:00 pm "0 0 12 ? * WED"
 
-                .Build();
-            await scheduler.Start();
-            // Tell quartz to schedule the job using our trigger
-            await scheduler.ScheduleJob(job, trigger);
-        }
-        catch (Exception ex)
-        {
 
-            LogService.LogMessage(ex.Message);
-        }
-
-   
-    }
 
     private async void RowClick(TableRowClickEventArgs<AGVTaskModel> tableRowClickEventArgs)
     {
@@ -242,12 +240,8 @@
                         await localStorage.RemoveItemAsync("agv_task");
                     else
                         await localStorage.SetItemAsync<List<AGVTaskModel>>("agv_task", lst);
-                 
-                    if (triggerKey == null) 
-                      triggerKey = new TriggerKey(q.Title);
-                    if(scheduler==null)
-                       scheduler = await _iSchedulerFactory.GetScheduler();
-                    await scheduler.UnscheduleJob(triggerKey);
+
+                    await TimeJobService.DeleteSchedule(q.Title);
                     appState.SetModel(appState.SelectedModel, ActionType.ADDTASK);
                     StateHasChanged();
                 }
@@ -258,44 +252,12 @@
         catch (Exception ex)
         {
             
-            LogService.LogMessage(ex.Message);
+            LogService.LogMessage("AGVTask RowCLick " + ex.Message);
         }
       
     }
 
 
-    private void EditShowList(AGVTaskModel _model){
-   
-        schedulModel = "0 " + _model.StartTime.Value.Minutes  + " " + _model.StartTime.Value.Hours  +   " ? * ";
-        foreach(var p in _model.WeekOptions){
-             switch(p){
-                case "周一":
-                    schedulModel += "MON,";
-                    break;
-                case "周二":
-                    schedulModel +="TUE,";
-                    break;
-                case "周三":
-                    schedulModel += "WED,";
-                    break;
-                case "周四":
-                    schedulModel += "THU,";
-                    break;
-                case "周五":
-                    schedulModel += "FRI,";
-                    break;
-                case "周六":
-                    schedulModel += "SAT,";
-                    break;
-                case "周日":
-                    schedulModel += "SUN,";
-                    break;
-
-            }
-        }
-
-          schedulModel = schedulModel.TrimEnd(',');
-
-    }
+  
  
 }

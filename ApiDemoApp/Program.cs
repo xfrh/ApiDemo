@@ -7,17 +7,19 @@ using MudBlazor.Services;
 using Quartz.Impl;
 using Quartz;
 using Quartz.Spi;
+using BlazorDownloadFile;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+builder.Services.AddSignalR();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddSingleton<AppState>();
-builder.Services.AddSingleton<DataService>();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddHostedService<StatuService>();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
 
@@ -29,10 +31,9 @@ builder.Services.AddHttpClient("nav", c =>
     c.BaseAddress = new Uri(builder.Configuration["nav"]);
 });
 
-
 builder.Services.AddSingleton<AuthenticationStateProvider, TestAuthenticationStateProvider>();
 //builder.Services.AddCors();
-
+builder.Services.AddBlazorDownloadFile();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(b =>
@@ -61,5 +62,4 @@ app.UseCors();
 app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
-
 app.Run();

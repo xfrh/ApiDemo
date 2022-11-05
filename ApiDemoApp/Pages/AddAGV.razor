@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles="Admin")]
 @using System.ComponentModel.DataAnnotations
 @using ApiDemoApp.Models
+@using ApiDemoApp.Services
 @using System
 @using System.Text
 @using System.Reflection
@@ -16,12 +17,16 @@
          <DataAnnotationsValidator/>
         <MudCard>
             <MudCardContent>
-                <MudTextField Label="AGV 编号" HelperText="小车编号" Class="mt-3"
-                              @bind-Value="model.name" For="@(() => model.name)"/>
-                <MudTextField Label="Type" HelperText="机器人类型" Class="mt-3"
-                              @bind-Value="model.type" For="@(() => model.type)"/>
-                <MudTextField Label="ip" HelperText="小车ip地址" Class="mt-3"
-                              @bind-Value="model.url" For="@(() => model.url)"/>
+               <MudTextField Label="ip" HelperText="小车ip地址" Class="mt-3"
+                                  @bind-Value="model.url" For="@(() => model.url)" />
+                    <MudTextField Label="Agv 编号"  Class="mt-3" HelperText="输入ip地址后,点击图标获得agv编号"
+                                  Adornment="Adornment.End" OnAdornmentClick="ButtonNameclick" AdornmentIcon="@Icons.Material.Filled.AttachMoney" AdornmentColor="Color.Warning"
+                                  @bind-Value="model.name" For="@(() => model.name)" />
+
+                    <MudTextField Label="版本" HelperText="输入ip地址后,点击图标获得版本号" Class="mt-3"
+                                  Adornment="Adornment.End" OnAdornmentClick="ButtonVersionclick"  AdornmentIcon="@Icons.Filled.HelpOutline"
+                                  ReadOnly=true @bind-Value="model.type" For="@(() => model.type)" AdornmentColor="Color.Secondary" />
+              
               </MudCardContent>
             <MudCardActions>
                 <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">注册</MudButton>
@@ -34,13 +39,13 @@
           <MudTable Items="@lst"  @ref="mudTable"  Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info" OnRowClick="RowClick" T = "RegisterAGVFrom" >
          <HeaderContent>
             <MudTh>AGV编号</MudTh>
-            <MudTh>机器人类型</MudTh>
+            <MudTh>应用版本</MudTh>
             <MudTh>ip地址</MudTh>
            
         </HeaderContent>
         <RowTemplate>
         <MudTd DataLabel="AGV 编号">@context.name</MudTd>
-          <MudTd DataLabel="类型">@context.type</MudTd>
+          <MudTd DataLabel="版本号">@context.type</MudTd>
           <MudTd DataLabel="ip地址">@context.url</MudTd>
           
         </RowTemplate>
@@ -65,12 +70,12 @@
     {
         if (firstRender)
         {
-              lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
-         if (lst == null)
-            lst = new List<RegisterAGVFrom>();
+            lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
+            if (lst == null)
+                lst = new List<RegisterAGVFrom>();
             StateHasChanged();
         }
-      
+
     }
 
     private async void OnValidSubmit(EditContext context)
@@ -81,11 +86,47 @@
         appState.SetModel(model, Services.ActionType.ADD);
         model = new RegisterAGVFrom();
         await localStorage.SetItemAsync<List<RegisterAGVFrom>>("agv_table", lst);
-       
-       
+
+
 
     }
 
+    async void ButtonNameclick()
+    {
+        if(model!=null){
+            if(!string.IsNullOrEmpty(model.url)){
+                HttpService.Base_URL = "http://" + model.url;
+                HostName hostname= await HttpService.Execute_Get("hostname");
+              
+                if(hostname!=null ){
+                    model.name = hostname.hostname;
+                    StateHasChanged();
+                }
+
+            } 
+          
+        }
+    }
+
+
+    async void ButtonVersionclick()
+    {
+        if (model != null)
+        {
+            if (!string.IsNullOrEmpty(model.url))
+            {
+                HttpService.Base_URL = "http://" + model.url;
+                 VersionName versionName = await HttpService.Execute_Get("current_version");
+                if(versionName != null)
+                {
+                    model.type = versionName.version;
+                    StateHasChanged();
+                }
+
+            }
+
+        }
+    }
     private async void RowClick(TableRowClickEventArgs<RegisterAGVFrom> tableRowClickEventArgs)
     {
         RegisterAGVFrom registerAGVFrom = tableRowClickEventArgs.Item;

@@ -2,37 +2,48 @@
 @attribute [Authorize(Roles = "Admin")]
 @using ApiDemoApp.Models
 @using ApiDemoApp.Services
-@inject DataService dataService
+@using System.Net.Http.Headers
+@using BlazorDownloadFile
+@using System.Text.Json
 @inject AppState appState;
 @inject ISnackbar snackBar;
+@inject IJSRuntime JS;
+@implements IDisposable;
+
 <MudPaper Height="400px" Width="100%" Elevation="0" Class=" mt-16">
     <MudContainer MaxWidth="MaxWidth.Medium">
-        <MudPopover Open="@_isOpen" Fixed="true" Class="px-4 pt-4" AnchorOrigin="Origin.TopCenter" TransformOrigin="Origin.TopCenter">
+   <MudPopover Open="@_isOpen" Fixed="true" Class="px-4 pt-4" AnchorOrigin="Origin.TopCenter" TransformOrigin="Origin.TopCenter">
     <div class="d-flex flex-column" style="width:400px" >
         <MudText>正在扫描地图.....</MudText>
         <MudProgressCircular Color="Color.Default" Indeterminate="true" />
-        <MudButton OnClick="@Save" Class="ml-auto mr-n3 mb-1" Color="Color.Error" >完成</MudButton>
+        <MudButton OnClick="@Save" Class="ml-auto mr-n3 mb-1" Color="Color.Error" Disabled="@_isRunning"  >完成</MudButton>
     </div>
-</MudPopover>
+      </MudPopover>
         <MudPaper Height="60px" Width="100%" Square="true">
-            <MudFab StartIcon="@Icons.Filled.Bookmark" Label="增量扫描" OnClick="@Scan" />
-        </MudPaper>
+            <MudFab StartIcon="@Icons.Filled.DocumentScanner" Label="地图模式" OnClick="@Scan" />
+            <MudFab HtmlTag="label" StartIcon="@Icons.Filled.CloudUpload" Label="上传地图" for="fileInput" />
+            <InputFile id="fileInput" OnChange="HandleSelected" hidden accept=".jpg, .jpeg, .png" />
+       </MudPaper>
         <MudPaper Height="400px" Width="100%" Square="true" Elevation="0">
              <MudCard Elevation="25">
     <MudCardHeader>
         <CardHeaderContent>
-            <MudText Typo="Typo.h6">修改地图名称</MudText>
+            <MudText Typo="Typo.h6">地图信息</MudText>
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent>
+
+         <MudImage Src="@map.map.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@map.map.width" Height="@map.map.height"  />
         <MudTextField @bind-Value="map.name" Label="地图名称" Variant="Variant.Text" Margin="Margin.Normal" ReadOnly></MudTextField>
         <MudTextField @bind-Value="newname" Label="新的地图名称" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
         <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="Changename">修改名称</MudButton>
+
+    
     </MudCardContent>
         </MudCard>
 <br />
             <br />
-            <MudTable Elevation="25" Items="@maps" Filter="new Func<AGVMapModel, bool>(Search)" @bind-map="map">
+            <MudTable Elevation="25" Items="@maps" Filter="new Func<MapModel, bool>(Search)" @bind-map="map">
                 <ToolBarContent>
                     <MudText Typo="Typo.h6">地图列表</MudText>
                     <MudSpacer />
@@ -48,12 +59,14 @@
                  
                     <MudTd DataLabel="">
                         <MudFab @onclick="@(()=>Edit(@context.name))" Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Size="Size.Small" IconSize="Size.Small" Title="编辑地图" />
-                         <MudFab @onclick="@(()=>DownLoad(@context.name))" Color="Color.Primary" Icon="@Icons.Filled.CloudDownload" Size="Size.Small" IconSize="Size.Small" Title="下载地图" />
+                        <MudFab @onclick="@(()=>DownLoad(@context.name))" Color="Color.Primary" Icon="@Icons.Filled.CloudDownload"  Size="Size.Small" IconSize="Size.Small" Title="下载地图" />
                         <MudFab @onclick="@(()=>Apply(@context.name))" Color="Color.Primary" Icon="@Icons.Filled.LocationOn" Size="Size.Small" IconSize="Size.Small" Title="应用地图" />
                         <MudFab @onclick="@(()=>Delete(@context.name))" Color="Color.Secondary" Icon="@Icons.Material.Filled.Delete" Size="Size.Small" IconSize="Size.Small" Title="删除地图" />
-                    </MudTd>
+                    
+                        </MudTd>
                 </RowTemplate>
             </MudTable>
+           
         </MudPaper>
     </MudContainer>
 </MudPaper>
@@ -62,11 +75,16 @@
 @code {
     private string searchString = "";
     private string newname = "";
-    private AGVMapModel map = new AGVMapModel();
-    private List<AGVMapModel> maps = new List<AGVMapModel>();
+    private MapModel map = new MapModel();
+    private List<MapModel> maps = new List<MapModel>();
+    IList<IBrowserFile> files = new List<IBrowserFile>();
+    ModeName modeName = new ModeName();
     public bool _isOpen;
-    [Inject] private IDialogService DialogService { get; set; }
+    public bool _isRunning;
+    PeriodicTimer? timer;
 
+    [Inject] private IDialogService DialogService { get; set; }
+    [Inject] public IBlazorDownloadFileService BlazorDownloadFileService { get; set; }
 
     public void ToggleOpen()
     {
@@ -77,16 +95,24 @@
     }
 
 
+
     protected override async Task OnInitializedAsync()
     {
+        map.map = new MapLayer();
         await  Getmaps();
+        StateHasChanged();
+
     }
-    private async Task<List<AGVMapModel>>  Getmaps()
+
+
+    private async Task<List<MapModel>>  Getmaps()
     {
-        maps = await dataService.MapList();
+        if (string.IsNullOrEmpty(HttpService.Base_URL))
+            HttpService.Base_URL = "http://" + appState.SelectedModel.url;
+        maps = await HttpService.Execute_Get("history_map");
         return maps;
     }
-    private bool Search(AGVMapModel map)
+    private bool Search(MapModel map)
     {
         if (string.IsNullOrWhiteSpace(searchString)) return true;
         if (map.name.Contains(searchString, StringComparison.OrdinalIgnoreCase))
@@ -95,22 +121,93 @@
         }
         return false;
     }
-    private async void Save()
+    private async Task Save()
     {
+        _isRunning = true;
         bool? result = await DialogService.ShowMessageBox(
          "提示",
          "要保存当前扫描地图吗？",
          yesText: "保存", cancelText: "取消");
         if (result != null)
         {
-            await dataService.Savemap();
-            map = new AGVMapModel();
+
+            await HttpService.Execute_Post("save_map",null);
             snackBar.Add("当前地图被保存.", Severity.Success);
+            await Task.Delay(10000);
+            var stringPayload = "{ \"mode\": " + 2 + "}";
+            await HttpService.Execute_Post("set_mode", stringPayload);
             await Getmaps();
+
         }
+
+        timer?.Dispose();
         ToggleOpen();
+        _isRunning = false;
         StateHasChanged();
     }
+    private async Task HandleSelected(InputFileChangeEventArgs e)
+    {
+        try
+        {
+
+            var file = e.GetMultipleFiles(1)[0];
+            long maxFileSize = file.Size;
+            await using MemoryStream fs = new MemoryStream();
+            await file.OpenReadStream(maxFileSize).CopyToAsync(fs);
+            Byte[] buf = GetBytes(fs);
+            var formdata = new MultipartFormDataContent();
+            formdata.Add(new StreamContent(new MemoryStream(buf)), "file", file.Name);
+           
+            var result = await HttpService.UploadMap(formdata);
+            //formdata.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data");
+            //formdata.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+            //formdata.Add(content: new StreamContent(fs),name: "FromFile",fileName:file.Name);
+            // content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data");
+            // content.Add(content:new StreamContent(fs),name:"file",fileName:file.Name);
+            //var imgStatus= await HttpService.UploadMap(formdata);
+            //// Byte[] buf = GetBytes(fs);
+            // ////string payload = JsonSerializer.Serialize(new ImageFile() { file = Convert.ToBase64String(buf), contentType = file.ContentType, fileName = file.Name });
+            // ////await HttpService.Execute_Post("upload", payload);
+          
+            if (result == "success")
+            {
+                  await DialogService.ShowMessageBox("提示", "地图上传成功", yesText: "确定");
+                  await Getmaps();
+                  await InvokeAsync(StateHasChanged);
+            }
+            else
+              {
+                await DialogService.ShowMessageBox("提示", "地图上传失败，查看log", yesText: "确定");
+              }
+          
+
+        }
+        catch (Exception ex)
+        {
+            
+            LogService.LogMessage("handleSelected :" + ex.Message);
+        }
+     
+        //var fileContent = new StreamContent(file.OpenReadStream(file.Size));
+        //using var content = new MultipartFormDataContent();
+        //fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+        //content.Add(content: fileContent, name: "\"data\"", fileName: file.Name);
+        //string result= await HttpService.UploadMap(content);
+       // if(string.IsNullOrEmpty(result)){
+          
+
+      //  }
+    }
+
+    public static byte[] GetBytes(Stream stream)
+    {
+        var bytes = new byte[stream.Length];
+        stream.Seek(0, SeekOrigin.Begin);
+        stream.ReadAsync(bytes, 0, bytes.Length);
+        stream.Dispose();
+        return bytes;
+    }
+
     private void Edit(string name)
     {
         map = maps.FirstOrDefault(c => c.name == name);
@@ -121,24 +218,25 @@
     {
         if (map == null) return;
         if (string.IsNullOrEmpty(newname)) return;
-        AGVMapModel _newMap = new AGVMapModel() { name = newname };
+
         bool? result = await DialogService.ShowMessageBox(
          "提示",
          "要修改" + map.name + "地图吗？",
          yesText: "确定", cancelText: "取消");
         if (result != null)
         {
-            await dataService.RenameMap(map, _newMap);
+            var stringPayload = "{ \"old_name\":\"" + map.name + "\",\"new_name\":\"" + newname + "\"}";
+            await HttpService.Execute_Post("rename_map", stringPayload);
             snackBar.Add("地图名称已修改", Severity.Success);
             await Getmaps();
-            map = new AGVMapModel();
+            map.name = newname;
             newname = "";
-            await Getmaps();
             StateHasChanged();
         }
 
     }
     private async void DownLoad(string name){
+
         map = maps.FirstOrDefault(c => c.name == name);
         if (map == null) return;
         bool? result = await DialogService.ShowMessageBox(
@@ -147,11 +245,26 @@
          yesText: "确定", cancelText: "取消");
         if (result != null)
         {
-            await dataService.MapDownLoad(map);
-            snackBar.Add("地图下载", Severity.Success);
-            await Getmaps();
+            try
+            {
+             
+                 HttpResponseMessage resp=  await HttpService.MapDownLoad(name);
+                if(resp!=null){
+                         using var resultStream = await resp.Content.ReadAsStreamAsync();
+                         await BlazorDownloadFileService.DownloadFile(name + ".png", resultStream, "application/octet-stream");
+                }
+           
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage("downloadimge " + ex.Message);
+            }
+
         }
     }
+
+
 
     private async void Apply(string name)
     {
@@ -162,7 +275,8 @@
            "要应用" + map.name +  "地图吗？",
            yesText: "确定", cancelText: "取消");
         if(result!=null){
-            await dataService.ApplyMap(map);
+            var stringPayload = "{\"name\":" + name + "\"}";
+            await HttpService.Execute_Post("apply_map", stringPayload);
             snackBar.Add("地图已应用", Severity.Success);
             StateHasChanged();
         }
@@ -178,7 +292,8 @@
         if (result != null)
         {
             var map = maps.FirstOrDefault(c => c.name == name);
-            await dataService.Delete(map);
+            var stringPayload = "{ \"name\":\"" + name + "\"}";
+            await HttpService.Execute_Post("delete_map", stringPayload);
             snackBar.Add("地图已删除.", Severity.Success);
             await Getmaps();
             StateHasChanged();
@@ -194,12 +309,59 @@
           yesText: "确定", cancelText: "取消");
         if (result != null)
         {
-            ToggleOpen();
-            await dataService.Switch_Map();
-            snackBar.Add("转到地图增量模式扫描.", Severity.Success);
-            StateHasChanged();
+            result = await DialogService.ShowMessageBox(
+          "提示",
+          "选择扫描模式",
+          yesText: "增量扫描", cancelText: "全新扫描");
+           if(result!=null){
+                ToggleOpen();
+                var stringPayload = "{ \"mode\": " + 3 + "}";
+                await HttpService.Execute_Post("set_mode", stringPayload);
+                map = new MapModel();
+                map.map = new MapLayer();
+                timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+                await Task.Run(() => RunTimer());
+                snackBar.Add("转到地图增量模式扫描.", Severity.Success);
+                StateHasChanged();
+           }
+           else{
+                ToggleOpen();
+                var stringPayload = "{ \"mode\": " + 1 + "}";
+                await HttpService.Execute_Post("set_mode", stringPayload);
+                map = new MapModel();
+                map.map = new MapLayer();
+                timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+                await Task.Run(() => RunTimer());
+                snackBar.Add("转到地图新建模式扫描.", Severity.Success);
+                StateHasChanged();
+           }
+          
         }
     }
 
-  
+
+    async void RunTimer()
+    {
+        while (await timer.WaitForNextTickAsync())
+        {
+            try
+            {
+                map.name = await HttpService.Execute_Get("current_map");
+                map.map = await HttpService.Execute_Get("map");
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage("RunTimer:" + ex.Message);
+            }
+          
+        }
+    }
+
+
+    public void Dispose()
+    {
+        timer?.Dispose();
+    }
 }

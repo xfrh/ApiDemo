@@ -13,6 +13,7 @@ namespace ApiDemoApp.Services
         string after_target;
         MoveStatus moveStatus;
         Queue<string> routes;
+        List<AGVProperties> lst_properties;
         Charge charge = new Charge()
         {
             type = 1,
@@ -29,7 +30,7 @@ namespace ApiDemoApp.Services
                 Base_URL = "http://" +  dataMap.GetString("url");
                 string target = dataMap.GetString("target");
                 after_target = dataMap.GetString("after");
-
+                lst_properties = JsonSerializer.Deserialize<List<AGVProperties>>(dataMap.GetString("properties"));
                 string[] targets = target.Split(",");
                 for (int i = 0; i < targets.Length; i++)
                 {
@@ -58,13 +59,13 @@ namespace ApiDemoApp.Services
         {
             while (moveStatus.status != 1)
             {
-                moveStatus = await Cur_Status();
+                moveStatus = await HttpService.Execute_Get("movebase_status");
                 if (moveStatus.status == 2) break;
                 Thread.Sleep(500);
             }
             while (moveStatus.status == 1)
             {
-                moveStatus = await Cur_Status();
+                moveStatus = await HttpService.Execute_Get("movebase_status");
                 if (moveStatus.status == 2) break;
                 Thread.Sleep(500);
             }
@@ -77,106 +78,46 @@ namespace ApiDemoApp.Services
             while (routes.Count > 0)
             {
                 string number = routes.Dequeue();
-                await StartNav(new TargetName() { point = number });
+                var q = lst_properties.FirstOrDefault(v => v.Targetname == number);
+                string paylaod = JsonSerializer.Serialize(new TargetName() { point = number });
+                await HttpService.Execute_Post("nav_point", paylaod);
+                if (q.isLockedOnLeave)
+                    await HttpService.Execute_Post("lock", null);
                 int t_no = await Report_Progress();
                 if (t_no == 3)
+                {
+                    int wait_time = 0;
+                 
+                    if(q != null)
+                    {
+                        wait_time = q.StayTime;
+                        if (q.isUnlockOnArrial)
+                            await HttpService.Execute_Post("unlock", null);
+                    }
+                    if (wait_time > 0)
+                        Thread.Sleep(wait_time*1000);
                     await ExecuteTask();
+
+                }
+                   
                 else
                     break;
             }
             if (routes.Count == 0 && after_target != null)
              {
                 Coordinace coordinace = JsonSerializer.Deserialize<Coordinace>(after_target);
-                await StartNav(coordinace);
+                var stringPayload = JsonSerializer.Serialize(coordinace);
+                await HttpService.Execute_Post("nav", stringPayload);
             }
         }
 
-        public async Task<MoveStatus> Cur_Status()
-        {
-           try
-            {
-                using (var client = new HttpClient())
-                {
-                    string call_url = Base_URL + "/reeman/movebase_status";
-                    return await client.GetFromJsonAsync<MoveStatus>(call_url);
-                }
-
-            }
-            catch (Exception ex)
-            {
-                LogService.LogMessage(ex.Message);
-                return await Task.FromResult<MoveStatus>(null);
-            }
-        }
-        public async Task<string> StartNav(Coordinace coordinace)
-        {
-            string statusMessage = "";
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    string call_url = Base_URL + "/cmd/nav";
-                    coordinace.theta = coordinace.theta * Math.PI / 180;
-                    var stringPayload =JsonSerializer.Serialize(coordinace);
-                    var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
-                    var httpResponse = await client.PostAsync(call_url, httpContent);
-                    statusMessage = await httpResponse.Content.ReadAsStringAsync();
-
-                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        statusMessage = "";
-                    }
-                    else
-                    {
-                        statusMessage = await httpResponse.Content.ReadAsStringAsync();
-                        LogService.LogMessage(statusMessage);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-
-                LogService.LogMessage(ex.Message);
-
-            }
-            return statusMessage;
-        }
-        public async Task<string> StartNav(TargetName pointname)
-        {
-                 
-            string statusMessage = "";
-            try
-            {
-                 using (var client = new HttpClient())
-                {
-                    string target_url = pointname.point == "充电桩" ? "/cmd/charge" : "/cmd/nav_point";
-                    string call_url = Base_URL + target_url;
-                    var stringPayload = pointname.point == "充电桩" ? JsonSerializer.Serialize(charge) : JsonSerializer.Serialize(pointname);
-                    var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
-                    var httpResponse = await client.PostAsync(call_url, httpContent);
-                    statusMessage = await httpResponse.Content.ReadAsStringAsync();
-
-                    if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        statusMessage = "";
-                    }
-                    else
-                    {
-                        statusMessage = await httpResponse.Content.ReadAsStringAsync();
-                        LogService.LogMessage(statusMessage);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-
-                LogService.LogMessage(ex.Message);
-
-            }
-            return statusMessage;
-        }
-
+     
+      
        
+
+     
+
+      
 
     }
 }

@@ -8,39 +8,137 @@
 @using SixLabors.ImageSharp.Formats.Png
 @using SixLabors.ImageSharp.Processing
 @using SixLabors.ImageSharp.Drawing.Processing;
-@inject DataService dataService
 @inject AppState appState;
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
+
 @implements IDisposable;
   <MudPaper Height="400px" Width="100%" Elevation="0"  Class=" mt-16">
      <MudContainer MaxWidth="MaxWidth.Medium"  >
           <MudPaper Height="60px" Width="100%" Square="true" >
             <MudFab StartIcon="@Icons.Filled.Bookmark" Label="显示设定的目标坐标" OnClick="async()=> {await ProcessMap();}" Disabled="@btnDisabled"/>
          </MudPaper>
-        <MudPaper Height="400px" Width="100%" Square="true" Elevation="0" >
-                <MudImage Src="@mapLayer.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height" />
-        </MudPaper>
+        
+            <MudPaper Height="400px" Width="100%" Square="true" Elevation="0">
+            <MudElement @bind-Ref="_mudImag" HtmlTag="input" Style="visibility:hidden" />
+            <MudImage Src="@mapLayer.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height" @onmousedown="@Mouse_Move"   />
+         </MudPaper>
+      
+      
+        <MudPopover Open="@_isOpen" Fixed="true" Class="px-4 pt-4" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+            <MudPaper Outlined="true" Class="px-4 py-1" Height="300px">
+                    <EditForm Model="@aGVProperties" OnValidSubmit="OnValidSubmit">
+                      <DataAnnotationsValidator />
+                           <MudTextField Class="mt-3" @bind-Value="aGVProperties.Targetname" ReadOnly=true/>
+                           <MudTextField Class="mt-3" @bind-Value="aGVProperties.StayTime" For="@(() => aGVProperties.StayTime)" Label="目标点停留时长(单位秒)" T="int" />
+                           <MudCheckBox @bind-Checked="aGVProperties.isUnlockOnArrial" Label="到达后断电"></MudCheckBox>
+                           <MudCheckBox @bind-Checked="aGVProperties.isLockedOnLeave" Label="离开后上电"></MudCheckBox>
+                           <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="MudBlazor.Color.Primary">确认</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="MudBlazor.Color.Secondary" OnClick="ToggleOpen">取消</MudButton>
+                </EditForm>
+            </MudPaper>
+        </MudPopover>
     </MudContainer>
 </MudPaper>
 
 
 @code {
-    
+    private  double LEFT_PADDING = 0;
+    private  double TOP_PADDING = 0;
+    [Inject] private IDialogService DialogService { get; set; }
     MapLayer mapLayer=new MapLayer();
     bool btnDisabled = true;
-    string imagePath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot//Images//layout1.png");
+    Dictionary<string, Coordinace> lst;
+    ElementReference _mudImag = new ElementReference();
+    Coordinace coordinace;
+    public bool _isOpen;
+    AGVProperties aGVProperties;
+    List<AGVProperties> lst_properties;
+    // string imagePath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot//Images//layout1.png");
     protected async override Task OnInitializedAsync()
     {
-       
-        mapLayer = await dataService.Cur_Map();
+
+        // mapLayer = await dataService.Cur_Map();
+        mapLayer = await HttpService.Execute_Get("map");
+        lst = new Dictionary<string, Coordinace>();
+        lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
+        if (lst_properties == null)
+            lst_properties = new List<AGVProperties>();
         btnDisabled = mapLayer.image_url == null;
+        await GetDimensions();
         appState.OnChange += ReceiveData;
     }
+
+
+    async Task GetDimensions()
+    {
+        //  var dimension = await Service.GetDimensions(_mudImag);
+        var result =await _mudImag.MudGetBoundingClientRectAsync();
+        LEFT_PADDING= result.AbsoluteLeft;
+        TOP_PADDING = result.AbsoluteTop;
+    }
+
+
+
 
     public void Dispose()
     {
         appState.OnChange -= ReceiveData;
 
     }
+
+    public void ToggleOpen()
+    {
+        if (_isOpen)
+            _isOpen = false;
+        else
+            _isOpen = true;
+        StateHasChanged();
+    }
+
+    private async void OnValidSubmit(EditContext context)
+    {
+        if (string.IsNullOrEmpty(aGVProperties.Targetname))
+        {
+            await DialogService.ShowMessageBox(
+                 "警告",
+                 "没有选择任务目标!",
+                 yesText: "OK");
+            return;
+        }
+        lst_properties.Add(aGVProperties);
+        await localStorage.SetItemAsync<List<AGVProperties>>("target_properties", lst_properties);
+        bool? result= await DialogService.ShowMessageBox(
+                "提示",
+                "目标属性保存完毕!",
+                yesText: "OK");
+        if(result!=null)
+            ToggleOpen();
+
+    }
+    protected async void Mouse_Move(MouseEventArgs e)
+    {
+
+        foreach(var key in lst.Keys){
+            double tx=e.ClientX - LEFT_PADDING;
+            double ty= e.ClientY - TOP_PADDING;
+            if(Math.Abs(tx-lst[key].x)<30 && Math.Abs(ty-lst[key].y)<30)
+            {
+                aGVProperties = lst_properties.FirstOrDefault(v => v.Targetname == key);
+                if(aGVProperties==null){
+                    aGVProperties = new AGVProperties()
+                        {
+                            Targetname = key,
+                            StayTime = 0,
+                            isLockedOnLeave = true,
+                            isUnlockOnArrial = true
+                        };
+                }
+                ToggleOpen();
+            }
+
+        }
+    }
+
 
     public async void ReceiveData()
     {
@@ -58,9 +156,10 @@
     {
         try
         {
-            mapLayer = await dataService.Cur_Map(); 
-            Coordinace coordinance = await dataService.Cur_Position();
-            List<TargetPointsModel> targetPointsModels = await dataService.Target_Points();
+            lst.Clear();
+            mapLayer = await HttpService.Execute_Get("map");
+            Coordinace coordinance = await HttpService.Execute_Get("pose");
+            List<TargetPointsModel> targetPointsModels = await HttpService.Execute_Get("android_target");
             byte[] imageBytes = Convert.FromBase64String(mapLayer.image_url.Replace("data:image/png;base64,","").Trim());
             FontCollection collection = new();
             FontFamily family = collection.Add(@"C:\Windows\Fonts\simhei.ttf");
@@ -75,7 +174,8 @@
                     IPath cur_position = new EllipsePolygon((float)px, (float)py, radius: 10.0f);
                     img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, cur_position));
                     img.Mutate(x=> x.DrawText(item.name, font, SixLabors.ImageSharp.Color.Black, new PointF((float)px-4, (float)py-5)));
-
+                    lst.TryAdd(item.name, new Coordinace() { x = px, y = py });
+                    
                 }
 
                 var px_xiaoche = (12.74 + coordinance.x) * 20;
@@ -127,5 +227,4 @@
         }
     }
   
-
 }

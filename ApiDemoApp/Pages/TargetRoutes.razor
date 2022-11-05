@@ -64,7 +64,7 @@ else
         {
             
             errorMessage = ex.Message;
-            LogService.LogMessage(ex.Message);
+            LogService.LogMessage("targetrouter OnInitializedAsync " + ex.Message);
         }
     }
 }

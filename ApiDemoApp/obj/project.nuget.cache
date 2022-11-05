@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "yqnKUfJqe0peY4ZyfeWkCnTrE6Hmn+UDxRrQYLEsFIzHeGj5stN1Hl9frNcHFCGOpCVFDLws1lnxfIhiHyxoBg==",
+  "dgSpecHash": "dJgBHVR2Kldhxw5wXGEnq5R0iuirkLmouB0RV4h0B8+6PntXT83p1Pxo2iR5O4qA5TMsweM25ddeaE8nBAorKg==",
   "success": true,
   "projectFilePath": "D:\\ApiDemo\\ApiDemo\\ApiDemoApp\\ApiDemoApp.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\frank\\.nuget\\packages\\blazordownloadfile\\2.4.0.2\\blazordownloadfile.2.4.0.2.nupkg.sha512",
     "C:\\Users\\frank\\.nuget\\packages\\blazored.localstorage\\4.2.0\\blazored.localstorage.4.2.0.nupkg.sha512",
     "C:\\Users\\frank\\.nuget\\packages\\microsoft.aspnetcore.authorization\\6.0.7\\microsoft.aspnetcore.authorization.6.0.7.nupkg.sha512",
     "C:\\Users\\frank\\.nuget\\packages\\microsoft.aspnetcore.components\\6.0.7\\microsoft.aspnetcore.components.6.0.7.nupkg.sha512",

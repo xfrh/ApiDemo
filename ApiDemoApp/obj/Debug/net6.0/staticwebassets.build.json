@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "OT4PN1CTB/By2CZlk3+4x8PMmb75VV9AvyFGPT3yVlU=",
+  "Hash": "cKlGRuJxLVAconRq/Z3SGL8R0X6IKCdN0+t80H9OBq4=",
   "Source": "ApiDemoApp",
   "BasePath": "_content/ApiDemoApp",
   "Mode": "Default",
@@ -16,6 +16,23 @@
     }
   ],
   "Assets": [
+    {
+      "Identity": "C:\\Users\\frank\\.nuget\\packages\\blazordownloadfile\\2.4.0.2\\staticwebassets\\BlazorDownloadFileScript.js",
+      "SourceId": "BlazorDownloadFile",
+      "SourceType": "Package",
+      "ContentRoot": "C:\\Users\\frank\\.nuget\\packages\\blazordownloadfile\\2.4.0.2\\staticwebassets\\",
+      "BasePath": "_content/BlazorDownloadFile",
+      "RelativePath": "BlazorDownloadFileScript.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "C:\\Users\\frank\\.nuget\\packages\\blazordownloadfile\\2.4.0.2\\staticwebassets\\BlazorDownloadFileScript.js"
+    },
     {
       "Identity": "C:\\Users\\frank\\.nuget\\packages\\mudblazor\\6.0.12\\staticwebassets\\MudBlazor.min.css",
       "SourceId": "MudBlazor",

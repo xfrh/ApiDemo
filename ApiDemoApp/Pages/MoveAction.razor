@@ -1,13 +1,21 @@
 ﻿@using ApiDemoApp.Models
 @using ApiDemoApp.Services
 @inject AppState appState
-<MudSlider @bind-Value="vx" Min="-1" Max="1" Step="0.05" ValueLabel="true" Color="Color.Info">直行速度(单位米/秒)</MudSlider>
-<MudSlider @bind-Value="vth" Min="-1" Max="1" Step="0.05" ValueLabel="true"   Color="Color.Error">转动角速度</MudSlider>
-<MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Primary" OnClick="StartNav">Start</MudButton>
+<MudSlider @bind-Value="vx" Min="-1" Max="1" Step="0.1" ValueLabel="true" Color="Color.Info">直行参数: @vx.ToString()</MudSlider>
+<MudSlider @bind-Value="vth" Min="-1" Max="1" Step="0.1" ValueLabel="true"   Color="Color.Error">角度参数:@vth.ToString()</MudSlider>
+<MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.Send" Color="Color.Primary" OnClick="StartNav">开始</MudButton>
+<MudTextField @bind-Value="HelperText" ReadOnly="true" Variant="Variant.Filled" Adornment="Adornment.End" AdornmentText="Help" AdornmentIcon="@Icons.Filled.Help" Class="mx-8" AdornmentColor="Color.Info" Lines="5" Margin="Margin.Normal" />
+
 @code {
     RegisterAGVFrom model;
     double vx = 0.0;
     double vth = 0.0;
+    public string HelperText { get; set; }
+
+    protected override void OnInitialized()
+    {
+        HelperText = "1.前进：前进直行参数为正数，角度参数为0." + Environment.NewLine + "2.后退：后退直行参数为负数，角度参数为0." + Environment.NewLine + "3.左转：直行参数为0，角度参数为正数." + Environment.NewLine + "4.右转：直行参数为0，角度参数为负数." + Environment.NewLine + "5.停止：直行，转动参数均为0";
+    }
     private async Task StartNav()
     {
         model = appState.SelectedModel;

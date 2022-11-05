@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v6.0": {
       "ApiDemoApp/1.0.0": {
         "dependencies": {
+          "BlazorDownloadFile": "2.4.0.2",
           "Blazored.LocalStorage": "4.2.0",
           "MudBlazor": "6.0.12",
           "Newtonsoft.Json": "13.0.1",
@@ -19,6 +20,18 @@
         },
         "runtime": {
           "ApiDemoApp.dll": {}
+        }
+      },
+      "BlazorDownloadFile/2.4.0.2": {
+        "dependencies": {
+          "Microsoft.AspNetCore.Components": "6.0.7",
+          "Microsoft.AspNetCore.Components.Web": "6.0.7"
+        },
+        "runtime": {
+          "lib/netstandard2.1/BlazorDownloadFile.dll": {
+            "assemblyVersion": "2.4.0.2",
+            "fileVersion": "2.4.0.2"
+          }
         }
       },
       "Blazored.LocalStorage/4.2.0": {
@@ -341,6 +354,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "BlazorDownloadFile/2.4.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-saaPX9vc/tCknXu0YHkER5ePVajil/40DjlCCCEakr4p6Rsby3sbK5mbNjaGJssdLKlR8C3NxSsIDyoGvawUvQ==",
+      "path": "blazordownloadfile/2.4.0.2",
+      "hashPath": "blazordownloadfile.2.4.0.2.nupkg.sha512"
     },
     "Blazored.LocalStorage/4.2.0": {
       "type": "package",

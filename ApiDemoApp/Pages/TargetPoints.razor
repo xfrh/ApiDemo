@@ -5,7 +5,7 @@
 @using System.Text
 @using System.Reflection
 @inject AppState appState
-@inject DataService dataService
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 @implements IDisposable;
 
 <MudTable Elevation="25" Items="@lst">
@@ -36,6 +36,7 @@
 
 @code {
     private List<TargetPointsModel> lst = new List<TargetPointsModel>();
+    private List<AGVProperties> lst_properties = new List<AGVProperties>();
     public static TargetPointsModel target = new TargetPointsModel();
     private string searchString = "";
     bool isCancelled;
@@ -48,28 +49,51 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (appState.SelectedModel != null)
-            lst = await dataService.Target_Points();
+        if (appState.SelectedModel != null){
+            lst = await HttpService.Execute_Get("android_target");
+
+        }
+
         InitUiComponets();
         appState.OnChange += ReceiveData;
     }
 
-    async void TestNext()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await dataService.TestNext();
+        if(firstRender){
+            lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
+        }
 
     }
+
+    //async void TestNext()
+    //{
+    //    await dataService.TestNext();
+
+    //}
     public async void ReceiveData()
     {
         if (appState.SelectedModel != null)
         {
             if (appState.SelectedType == ActionType.SELECTED)
             {
-                lst = await dataService.Target_Points();
+                lst = await HttpService.Execute_Get("android_target");
                 StateHasChanged();
             }
             else if(appState.SelectedType==ActionType.COMPLETE){
                 if(appState.SelectedModel.routes.Count>0){
+                    int wait_time = 0;
+                    if(lst_properties!=null){
+                        var q=lst_properties.FirstOrDefault(v=>v.Targetname== appState.SelectedModel.cur_target);
+                        if (q != null){
+                            wait_time = q.StayTime;
+                            if (q.isUnlockOnArrial)
+                                await HttpService.Execute_Post("unlock", null);
+                        }
+                           
+                    }
+                    if(wait_time>0)
+                      Thread.Sleep(wait_time*1000);
                     appState.SelectedModel.cur_target = appState.SelectedModel.routes.Dequeue();
                     appState.SetModel(appState.SelectedModel, ActionType.NAVIGATE);
                     NavUiComponets();
