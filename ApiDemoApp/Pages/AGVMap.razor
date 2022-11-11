@@ -53,21 +53,21 @@
     public bool _isOpen;
     AGVProperties aGVProperties;
     List<AGVProperties> lst_properties;
-    // string imagePath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "wwwroot//Images//layout1.png");
-    protected async override Task OnInitializedAsync()
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-
-        // mapLayer = await dataService.Cur_Map();
-        mapLayer = await HttpService.Execute_Get("map");
-        lst = new Dictionary<string, Coordinace>();
-        lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
-        if (lst_properties == null)
-            lst_properties = new List<AGVProperties>();
-        btnDisabled = mapLayer.image_url == null;
-        await GetDimensions();
-        appState.OnChange += ReceiveData;
+        if(firstRender){
+            mapLayer = await HttpService.Execute_Get("map");
+            lst = new Dictionary<string, Coordinace>();
+            lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
+            if (lst_properties == null)
+                lst_properties = new List<AGVProperties>();
+            btnDisabled = mapLayer.image_url == null;
+            await GetDimensions();
+            appState.OnChange += ReceiveData;
+            await InvokeAsync(StateHasChanged);
+        }
     }
-
 
     async Task GetDimensions()
     {
@@ -160,39 +160,87 @@
             mapLayer = await HttpService.Execute_Get("map");
             Coordinace coordinance = await HttpService.Execute_Get("pose");
             List<TargetPointsModel> targetPointsModels = await HttpService.Execute_Get("android_target");
+            //  List<TargetPolygon> polygons = await HttpService.Execute_Get("special_polygon");
+            List<List<double>> restrictArea = await HttpService.Execute_Get("restrict_layer");
             byte[] imageBytes = Convert.FromBase64String(mapLayer.image_url.Replace("data:image/png;base64,","").Trim());
             FontCollection collection = new();
             FontFamily family = collection.Add(@"C:\Windows\Fonts\simhei.ttf");
             Font font = family.CreateFont(12, FontStyle.Italic);
+            Font sp_font = family.CreateFont(24, FontStyle.Bold);
             using(Image img = Image.Load(imageBytes))
             {  
                 img.Mutate(x => x.Resize(mapLayer.width, mapLayer.height));
-                foreach(var item in targetPointsModels)
-                {
-                    var px = (12.74 + item.coordinace.x) * 20; //12.74
-                    var py = (20.12 - item.coordinace.y) * 20; //20.12
-                    IPath cur_position = new EllipsePolygon((float)px, (float)py, radius: 10.0f);
-                    img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, cur_position));
-                    img.Mutate(x=> x.DrawText(item.name, font, SixLabors.ImageSharp.Color.Black, new PointF((float)px-4, (float)py-5)));
-                    lst.TryAdd(item.name, new Coordinace() { x = px, y = py });
-                    
+                if(targetPointsModels!=null && targetPointsModels.Count>0){
+                    foreach(var item in targetPointsModels)
+                    {
+                        var px = (item.coordinace.x - mapLayer.origin_x) * 20;//(12.74 + item.coordinace.x) * 20; //12.74
+                        var py = mapLayer.height -((item.coordinace.y - mapLayer.origin_y) * 20); //(20.12 - item.coordinace.y) * 20; //20.12
+                        IPath cur_position = new EllipsePolygon((float)px, (float)py, radius: 10.0f);
+                        img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, cur_position));
+                        img.Mutate(x=> x.DrawText(item.name, font, SixLabors.ImageSharp.Color.Black, new PointF((float)px-4, (float)py-5)));
+                        lst.TryAdd(item.name, new Coordinace() { x = px, y = py });
+
+                    }
+                }
+                if(coordinace!=null){
+                    var px_xiaoche = (coordinance.x - mapLayer.origin_x) * 20; //(12.74 + coordinance.x) * 20;
+                    var py_xiaoche = mapLayer.height -((coordinance.y - mapLayer.origin_y) * 20); //(20.12 - coordinance.y) * 20;
+                    IPath cur_position_xiaoche = new EllipsePolygon((float)px_xiaoche, (float)py_xiaoche, radius: 10.0f);
+                    img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Yellow, cur_position_xiaoche));
+                    img.Mutate(x => x.DrawText("车", font, SixLabors.ImageSharp.Color.Black, new PointF((float)px_xiaoche - 4, (float)py_xiaoche - 5)));
                 }
 
-                var px_xiaoche = (12.74 + coordinance.x) * 20;
-                var py_xiaoche = (20.12 - coordinance.y) * 20;
-                IPath cur_position_xiaoche = new EllipsePolygon((float)px_xiaoche, (float)py_xiaoche, radius: 10.0f);
-                img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Yellow, cur_position_xiaoche));
-                img.Mutate(x=> x.DrawText("车", font, SixLabors.ImageSharp.Color.Black, new PointF((float)px_xiaoche-4, (float)py_xiaoche-5)));
+
+
+                if (restrictArea != null && restrictArea.Count > 0)
+                {
+                    var linePen = new Pen(SixLabors.ImageSharp.Color.Red, 2.5f);
+                    var points = new PointF[restrictArea.Count];
+                    for (int i = 0; i < restrictArea.Count; i++)
+                    {
+                        var px = (restrictArea[i][0] - mapLayer.origin_x) * 20;
+                        var py = mapLayer.height -((restrictArea[i][1] - mapLayer.origin_y) * 20);
+
+                        IPath yourPolygon = new Star(x: (float)px, y: (float)py, prongs: 5, innerRadii: 0.5f, outerRadii: 2.0f);
+                        img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, yourPolygon)); 
+
+                    }
+                }
+
+                //if(polygons!=null && polygons.Count>0)
+                //{
+                //    foreach (var item in polygons)
+                //    {
+                //        var linePen = new Pen(SixLabors.ImageSharp.Color.Red, 2.5f);
+                //        var points = new PointF[item.polygon.Count];
+                //        double mid_x = 0;
+                //        double mid_y = 0;
+                //        for(int i=0; i<item.polygon.Count; i++){
+                //            var px=(12.74 + item.polygon[i][0]) *20;
+                //            var py = (20.12 - item.polygon[i][1]) * 20;
+                //            if(i==item.polygon.Count/2){
+                //                 mid_x=px;
+                //                mid_y = py;
+                //            }
+                //            points[i] = new PointF((float)px, (float)py);
+                //        }
+                //        img.Mutate(x => x.DrawLines(linePen, points));
+                //        img.Mutate(x => x.DrawText(item.name, sp_font, SixLabors.ImageSharp.Color.Black, new PointF((float)mid_x -100, (float)mid_y - 20)));
+                //        img.Mutate(x => x.DrawText(item.speed.ToString()+ "m/s", sp_font, SixLabors.ImageSharp.Color.Black, new PointF((float)mid_x - 100, (float)mid_y)));
+                //    }
+                //}
+
+
                 if (addingRoute)
                 {
                     var linePen = new Pen(SixLabors.ImageSharp.Color.Blue, 2.5f);
                     var plans = appState.SelectedModel.DrawCoordinates;
                     var points = new PointF[plans.Count];
-                                      
+
                     for( int i =0; i<plans.Count; i++)
                     {
-                        var px = (12.74 + plans[i].x) * 20; 
-                        var py = (20.12 - plans[i].y) * 20; 
+                        var px = (plans[i].x - mapLayer.origin_x) * 20; //(12.74 + plans[i].x) * 20; 
+                        var py =mapLayer.height - ((plans[i].y - mapLayer.origin_y) * 20);//(20.12 - plans[i].y) * 20;
                         points[i] = new PointF((float)px, (float)py);
                     }
                      img.Mutate(x => x.DrawLines(linePen, points));
@@ -209,7 +257,7 @@
         catch (Exception ex)
         {
 
-            throw;
+            LogService.LogMessage("processmap" + ex.Message);
         }
 
 

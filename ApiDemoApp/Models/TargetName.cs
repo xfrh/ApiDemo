@@ -23,4 +23,16 @@
     {
         public int mode { get; set; }
     }
+
+    
+
+    public class TargetPolygon
+    {
+        public string name { get; set; }
+        public double speed { get; set; }
+        public List<List<double>> polygon { get; set; }
+    }
+
+ 
+
 }

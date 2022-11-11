@@ -8,22 +8,23 @@
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 @implements IDisposable;
 
-<MudTable Elevation="25" Items="@lst">
+
+<MudTable Elevation="25" Items="@lst" Breakpoint="Breakpoint.Sm">
     <ToolBarContent>
         <MudTextField @bind-Value="searchString" Placeholder="导航顺序" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.Route" IconSize="Size.Medium" Class="mt-0" ReadOnly="true"></MudTextField>
     </ToolBarContent>
-    <HeaderContent>
+    <HeaderContent > 
         <MudTh><MudCheckBox Label="全选" @bind-Checked="@All_Checked" @onclick="ToggleSelectAll" Disabled="@isAllChecked" /></MudTh>     
         @*<MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.VerifiedUser" IconColor="Color.Inherit" Size="Size.Small" OnClick="@TestNext">test next</MudButton>*@
-        <MudTh><MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.ElectricalServices" IconColor="Color.Inherit" Size="Size.Small" @onclick="NavCharge" Disabled="@isCharge">充电</MudButton></MudTh>
+        <MudTh ><MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.ElectricalServices" IconColor="Color.Inherit" Size="Size.Small" @onclick="NavCharge" Disabled="@isCharge">充电</MudButton></MudTh>
         <MudTh><MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Navigation" IconColor="Color.Inherit" Size="Size.Small" @onclick="StartNav" Disabled="@isNaved">导航</MudButton></MudTh>
         <MudTh><MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.CancelScheduleSend" IconColor="Color.Inherit" Size="Size.Small" @onclick="CancelNav" Disabled="@isCancelled">取消</MudButton></MudTh>
       
     </HeaderContent>
     <RowTemplate>
         <MudTd><MudCheckBox @bind-Checked="@context.isChecked" @onclick="@(()=>Edit(@context.name))" Disabled="@context.isCheckable">@context.name</MudCheckBox></MudTd>
-        <MudTd DataLabel="坐标">@string.Format("{0:N2}", @context.coordinace.x) @string.Format("{0:N2}", @context.coordinace.y) @string.Format("{0:N2}", @context.coordinace.theta)</MudTd>
-        <MudTd DataLabel="">
+        <MudTd DataLabel="坐标">x: @string.Format("{0:N2}", @context.coordinace.x) <br /> y:  @string.Format("{0:N2}", @context.coordinace.y)<br/> theta: @string.Format("{0:N2}", @context.coordinace.theta)</MudTd>
+           <MudTd DataLabel="">
             <MudFab @onclick="@(()=>Resume(@context.name))" Color="Color.Primary" Icon="@Icons.Filled.NotStarted" Size="Size.Small" IconSize="Size.Small" Title="开始"  Disabled="context.isStarted"/>
          </MudTd>
         <MudTd>
@@ -39,6 +40,7 @@
     private List<AGVProperties> lst_properties = new List<AGVProperties>();
     public static TargetPointsModel target = new TargetPointsModel();
     private string searchString = "";
+    private string coordinateString = "";
     bool isCancelled;
     bool isNaved;
     bool isCharge;
@@ -47,20 +49,16 @@
 
 
 
-    protected override async Task OnInitializedAsync()
-    {
-        if (appState.SelectedModel != null){
-            lst = await HttpService.Execute_Get("android_target");
-
-        }
-
-        InitUiComponets();
-        appState.OnChange += ReceiveData;
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if(firstRender){
+
+            if (appState.SelectedModel != null)
+            {
+                lst = await HttpService.Execute_Get("android_target");
+            }
+            InitUiComponets();
+            appState.OnChange += ReceiveData;
             lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
         }
 
@@ -73,39 +71,53 @@
     //}
     public async void ReceiveData()
     {
-        if (appState.SelectedModel != null)
+        try
         {
-            if (appState.SelectedType == ActionType.SELECTED)
+            if (appState.SelectedModel != null)
             {
-                lst = await HttpService.Execute_Get("android_target");
-                StateHasChanged();
-            }
-            else if(appState.SelectedType==ActionType.COMPLETE){
-                if(appState.SelectedModel.routes.Count>0){
-                    int wait_time = 0;
-                    if(lst_properties!=null){
-                        var q=lst_properties.FirstOrDefault(v=>v.Targetname== appState.SelectedModel.cur_target);
-                        if (q != null){
-                            wait_time = q.StayTime;
-                            if (q.isUnlockOnArrial)
-                                await HttpService.Execute_Post("unlock", null);
+                if (appState.SelectedType == ActionType.SELECTED)
+                {
+                    lst = await HttpService.Execute_Get("android_target");
+                    StateHasChanged();
+                }
+                else if (appState.SelectedType == ActionType.COMPLETE)
+                {
+                    if (appState.SelectedModel.routes.Count > 0)
+                    {
+                        int wait_time = 0;
+                        if (lst_properties != null)
+                        {
+                            var q = lst_properties.FirstOrDefault(v => v.Targetname == appState.SelectedModel.cur_target);
+                            if (q != null)
+                            {
+                                wait_time = q.StayTime;
+                                if (q.isUnlockOnArrial)
+                                    await HttpService.Execute_Post("unlock", null);
+                            }
+
                         }
-                           
+                        if (wait_time > 0)
+                            Thread.Sleep(wait_time * 1000);
+                        appState.SelectedModel.cur_target = appState.SelectedModel.routes.Dequeue();
+                        appState.SetModel(appState.SelectedModel, ActionType.NAVIGATE);
+                        NavUiComponets();
                     }
-                    if(wait_time>0)
-                      Thread.Sleep(wait_time*1000);
-                    appState.SelectedModel.cur_target = appState.SelectedModel.routes.Dequeue();
-                    appState.SetModel(appState.SelectedModel, ActionType.NAVIGATE);
-                    NavUiComponets();
-                }
-                else{
-                    appState.SelectedModel.cur_target = "";
-                    InitUiComponets();
+                    else
+                    {
+                        appState.SelectedModel.cur_target = "";
+                        InitUiComponets();
+
+                    }
 
                 }
-
             }
         }
+        catch (Exception ex)
+        {
+
+            LogService.LogMessage("targetpoints" + ex.Message);
+        }
+      
     }
 
     public void Dispose()

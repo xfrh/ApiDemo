@@ -47,7 +47,7 @@
     </MudAppBar>
   
  
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="@DrawerVariant.Persistent" Width="300px">
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" Variant="@DrawerVariant.Persistent" Width="380px">
         <MudDrawerHeader>
             <MudText Typo="Typo.h6" Class="mt-1">AGV 列表</MudText>
         </MudDrawerHeader>
@@ -73,7 +73,14 @@
         </MudDrawer>
 
     <MudMainContent>
+        <ErrorBoundary>
+            <ChildContent>
                     @Body
+            </ChildContent>
+            <ErrorContent>
+                <MudText Typo="Typo.h6">Whoa, sorry about that! While we fix this problem, buy some shirts!</MudText>
+            </ErrorContent>
+         </ErrorBoundary>
       </MudMainContent>
 </MudLayout>
 @code {
@@ -181,7 +188,7 @@
     {
         if (appState.SelectedModel == null) return;
         targetPoint_Nav = true;
-        drawerWidth = "500px";
+        drawerWidth = "450px";
         openRight = !openRight;
     }
 

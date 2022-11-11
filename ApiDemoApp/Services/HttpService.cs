@@ -1,12 +1,8 @@
 ﻿using ApiDemoApp.Models;
-using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using System.Net.Http.Headers;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using static System.Net.WebRequestMethods;
 
 namespace ApiDemoApp.Services
 {
@@ -36,7 +32,19 @@ namespace ApiDemoApp.Services
                             return await client.GetFromJsonAsync<VersionName>(call_url);
                         case "get_mode":
                             return await client.GetFromJsonAsync<ModeName>(call_url);
-                        case "android_target":
+                        case "special_polygon":
+                            {
+                                var q = await client.GetFromJsonAsync<JsonObject>(call_url);
+                                var result = q["polygons"];
+                                return JsonSerializer.Deserialize<List<TargetPolygon>>(result.ToString());
+                            }
+                        case "restrict_layer":
+                            {
+                                var q = await client.GetFromJsonAsync<JsonObject>(call_url);
+                                var result = q["coordinates"];
+                                return JsonSerializer.Deserialize<List<List<double>>>(result.ToString());
+                            }
+                           case "android_target":
 							{
                                 List<TargetPointsModel> lst = new List<TargetPointsModel>();
                                 Dictionary<string, List<string>> temp_lst = await client.GetFromJsonAsync<Dictionary<string, List<string>>>(call_url);
@@ -70,7 +78,7 @@ namespace ApiDemoApp.Services
                             {
                                 var lst = await client.GetFromJsonAsync<JsonObject>(call_url);
                                 var result = lst["maps"];
-                                return JsonSerializer.Deserialize<List<MapModel>>(result);
+                                return JsonSerializer.Deserialize<List<MapModel>>(result.ToString());
                             }
                          
                         default:
@@ -86,7 +94,7 @@ namespace ApiDemoApp.Services
 			}
         }
 
-		public static async Task Execute_Post(string cmdname,string payload)
+		public static async Task<string> Execute_Post(string cmdname,string payload)
 		{
             try
             {
@@ -95,11 +103,21 @@ namespace ApiDemoApp.Services
                     string call_url = Base_URL + "/cmd/" + cmdname;
                    var httpContent = payload == null ? null : new StringContent(payload, Encoding.UTF8, "application/json");
                     var httpResponse = await client.PostAsync(call_url, httpContent);
+                   if (!httpResponse.IsSuccessStatusCode)
+                    {
+                        LogService.LogMessage("uploadcontent" + httpResponse);
+                        return "failed";
+                    }
+                    else
+                    {
+                        return "success";
+                    }
                 }
 
             }
             catch (Exception ex)
             {
+                return ex.Message;
                 LogService.LogMessage("Execute_Post:"+ cmdname + ex.Message);
             }
 		}

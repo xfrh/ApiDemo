@@ -93,39 +93,60 @@
 
     async void ButtonNameclick()
     {
-        if(model!=null){
-            if(!string.IsNullOrEmpty(model.url)){
-                HttpService.Base_URL = "http://" + model.url;
-                HostName hostname= await HttpService.Execute_Get("hostname");
-              
-                if(hostname!=null ){
-                    model.name = hostname.hostname;
-                    StateHasChanged();
+        try
+        {
+            if (model != null)
+            {
+                if (!string.IsNullOrEmpty(model.url))
+                {
+                    HttpService.Base_URL = "http://" + model.url;
+                    HostName hostname = await HttpService.Execute_Get("hostname");
+
+                    if (hostname != null)
+                    {
+                        model.name = hostname.hostname;
+                        StateHasChanged();
+                    }
+
                 }
 
-            } 
-          
+            }
         }
+        catch (Exception ex)
+        {
+            
+            LogService.LogMessage("addagv" + ex.Message);
+        }
+      
     }
 
 
     async void ButtonVersionclick()
     {
-        if (model != null)
+        try
         {
-            if (!string.IsNullOrEmpty(model.url))
+            if (model != null)
             {
-                HttpService.Base_URL = "http://" + model.url;
-                 VersionName versionName = await HttpService.Execute_Get("current_version");
-                if(versionName != null)
+                if (!string.IsNullOrEmpty(model.url))
                 {
-                    model.type = versionName.version;
-                    StateHasChanged();
+                    HttpService.Base_URL = "http://" + model.url;
+                    VersionName versionName = await HttpService.Execute_Get("current_version");
+                    if (versionName != null)
+                    {
+                        model.type = versionName.version;
+                        StateHasChanged();
+                    }
+
                 }
 
             }
-
         }
+        catch (Exception ex)
+        {
+
+            LogService.LogMessage("addagv" + ex.Message);
+        }
+       
     }
     private async void RowClick(TableRowClickEventArgs<RegisterAGVFrom> tableRowClickEventArgs)
     {

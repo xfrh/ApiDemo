@@ -1,3 +1,0 @@
-2022/11/5 11:38:51: handleSelected :Unable to cast object of type 'Microsoft.AspNetCore.Components.Forms.BrowserFile' to type 'Microsoft.AspNetCore.Http.IFormFile'..
-2022/11/5 12:01:26: Execute_Get:base_encode'<' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0..
-2022/11/5 12:16:46: Execute_Get:android_target'<' is an invalid start of a value. Path: $ | LineNumber: 0 | BytePositionInLine: 0..

@@ -9,16 +9,19 @@
 @inject ISnackbar snackBar;
 @inject IJSRuntime JS;
 @implements IDisposable;
-
+ 
 <MudPaper Height="400px" Width="100%" Elevation="0" Class=" mt-16">
     <MudContainer MaxWidth="MaxWidth.Medium">
    <MudPopover Open="@_isOpen" Fixed="true" Class="px-4 pt-4" AnchorOrigin="Origin.TopCenter" TransformOrigin="Origin.TopCenter">
     <div class="d-flex flex-column" style="width:400px" >
-        <MudText>正在扫描地图.....</MudText>
+        <MudText>正在扫描地图....</MudText>
         <MudProgressCircular Color="Color.Default" Indeterminate="true" />
         <MudButton OnClick="@Save" Class="ml-auto mr-n3 mb-1" Color="Color.Error" Disabled="@_isRunning"  >完成</MudButton>
-    </div>
+      </div>
       </MudPopover>
+ 
+   
+
         <MudPaper Height="60px" Width="100%" Square="true">
             <MudFab StartIcon="@Icons.Filled.DocumentScanner" Label="地图模式" OnClick="@Scan" />
             <MudFab HtmlTag="label" StartIcon="@Icons.Filled.CloudUpload" Label="上传地图" for="fileInput" />
@@ -32,12 +35,18 @@
         </CardHeaderContent>
     </MudCardHeader>
     <MudCardContent>
-
-         <MudImage Src="@map.map.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@map.map.width" Height="@map.map.height"  />
+        @if(_isLoading){
+                        <MudProgressLinear Color="Color.Secondary" Indeterminate="true" Class="my-7" />
+        }
+        else
+        {
+        <MudImage Src="@map.map.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@map.map.width" Height="@map.map.height"  />
         <MudTextField @bind-Value="map.name" Label="地图名称" Variant="Variant.Text" Margin="Margin.Normal" ReadOnly></MudTextField>
         <MudTextField @bind-Value="newname" Label="新的地图名称" Variant="Variant.Text" Margin="Margin.Normal"></MudTextField>
         <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="Changename">修改名称</MudButton>
 
+        }
+     
     
     </MudCardContent>
         </MudCard>
@@ -81,6 +90,7 @@
     ModeName modeName = new ModeName();
     public bool _isOpen;
     public bool _isRunning;
+    public bool _isLoading;
     PeriodicTimer? timer;
 
     [Inject] private IDialogService DialogService { get; set; }
@@ -130,10 +140,16 @@
          yesText: "保存", cancelText: "取消");
         if (result != null)
         {
-
+            _isLoading = true;
+            StateHasChanged();
+            await Task.Delay(10);
             await HttpService.Execute_Post("save_map",null);
             snackBar.Add("当前地图被保存.", Severity.Success);
-            await Task.Delay(10000);
+            DateTime endTime = DateTime.Now.AddSeconds(10);
+            while (DateTime.Now < endTime)
+            {
+                await Task.Delay(100);
+            }
             var stringPayload = "{ \"mode\": " + 2 + "}";
             await HttpService.Execute_Post("set_mode", stringPayload);
             await Getmaps();
@@ -143,6 +159,7 @@
         timer?.Dispose();
         ToggleOpen();
         _isRunning = false;
+        _isLoading = false;
         StateHasChanged();
     }
     private async Task HandleSelected(InputFileChangeEventArgs e)
@@ -157,7 +174,7 @@
             Byte[] buf = GetBytes(fs);
             var formdata = new MultipartFormDataContent();
             formdata.Add(new StreamContent(new MemoryStream(buf)), "file", file.Name);
-           
+
             var result = await HttpService.UploadMap(formdata);
             //formdata.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data");
             //formdata.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
@@ -168,35 +185,35 @@
             //// Byte[] buf = GetBytes(fs);
             // ////string payload = JsonSerializer.Serialize(new ImageFile() { file = Convert.ToBase64String(buf), contentType = file.ContentType, fileName = file.Name });
             // ////await HttpService.Execute_Post("upload", payload);
-          
+
             if (result == "success")
             {
-                  await DialogService.ShowMessageBox("提示", "地图上传成功", yesText: "确定");
-                  await Getmaps();
-                  await InvokeAsync(StateHasChanged);
+                await DialogService.ShowMessageBox("提示", "地图上传成功", yesText: "确定");
+                await Getmaps();
+                await InvokeAsync(StateHasChanged);
             }
             else
-              {
+            {
                 await DialogService.ShowMessageBox("提示", "地图上传失败，查看log", yesText: "确定");
-              }
-          
+            }
+
 
         }
         catch (Exception ex)
         {
-            
+
             LogService.LogMessage("handleSelected :" + ex.Message);
         }
-     
+
         //var fileContent = new StreamContent(file.OpenReadStream(file.Size));
         //using var content = new MultipartFormDataContent();
         //fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
         //content.Add(content: fileContent, name: "\"data\"", fileName: file.Name);
         //string result= await HttpService.UploadMap(content);
-       // if(string.IsNullOrEmpty(result)){
-          
+        // if(string.IsNullOrEmpty(result)){
 
-      //  }
+
+        //  }
     }
 
     public static byte[] GetBytes(Stream stream)
@@ -247,13 +264,13 @@
         {
             try
             {
-             
-                 HttpResponseMessage resp=  await HttpService.MapDownLoad(name);
+
+                HttpResponseMessage resp=  await HttpService.MapDownLoad(name);
                 if(resp!=null){
-                         using var resultStream = await resp.Content.ReadAsStreamAsync();
-                         await BlazorDownloadFileService.DownloadFile(name + ".png", resultStream, "application/octet-stream");
+                    using var resultStream = await resp.Content.ReadAsStreamAsync();
+                    await BlazorDownloadFileService.DownloadFile(name + ".png", resultStream, "application/octet-stream");
                 }
-           
+
             }
             catch (Exception ex)
             {
@@ -266,8 +283,9 @@
 
 
 
-    private async void Apply(string name)
+    private async Task Apply(string name)
     {
+
         map = maps.FirstOrDefault(c => c.name == name);
         if (map == null) return;
         bool? result = await DialogService.ShowMessageBox(
@@ -275,12 +293,31 @@
            "要应用" + map.name +  "地图吗？",
            yesText: "确定", cancelText: "取消");
         if(result!=null){
-            var stringPayload = "{\"name\":" + name + "\"}";
-            await HttpService.Execute_Post("apply_map", stringPayload);
-            snackBar.Add("地图已应用", Severity.Success);
+            _isLoading = true;
             StateHasChanged();
-        }
+            await Task.Delay(10);
+         
+            var stringPayload = JsonSerializer.Serialize(new MapName(){name=name});
+            var q= await HttpService.Execute_Post("apply_map", stringPayload);
+            if(q=="success"){
+                snackBar.Add("正在应用地图请稍后.....", Severity.Normal);
+                DateTime endTime = DateTime.Now.AddSeconds(10);
+                while (DateTime.Now < endTime)
+                {
+                    await Task.Delay(100);
+                }
+                map.map = await HttpService.Execute_Get("map");
+            }
+            else
+             {
+                snackBar.Add("应用地图失败,查看log", Severity.Error);
+             }
+          
+            _isLoading = false;
+            StateHasChanged();
 
+        }
+      
     }
     private async void Delete(string name)
     {
@@ -309,11 +346,12 @@
           yesText: "确定", cancelText: "取消");
         if (result != null)
         {
-            result = await DialogService.ShowMessageBox(
+           result = await DialogService.ShowMessageBox(
           "提示",
           "选择扫描模式",
           yesText: "增量扫描", cancelText: "全新扫描");
-           if(result!=null){
+            if(result!=null){
+               
                 ToggleOpen();
                 var stringPayload = "{ \"mode\": " + 3 + "}";
                 await HttpService.Execute_Post("set_mode", stringPayload);
@@ -334,6 +372,7 @@
                 await Task.Run(() => RunTimer());
                 snackBar.Add("转到地图新建模式扫描.", Severity.Success);
                 StateHasChanged();
+
            }
           
         }

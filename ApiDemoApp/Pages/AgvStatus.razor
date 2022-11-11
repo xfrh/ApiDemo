@@ -56,22 +56,31 @@
     {
         if (firstRender)
         {
-            lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
-            lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
-            var agv_lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
-            if (agv_lst!=null && lst != null && lst.Count > 0)
+            try
             {
-                if (appState.SelectedModel == null)
+                lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
+                lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
+                var agv_lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
+                if (agv_lst!=null && lst != null && lst.Count > 0)
                 {
-                    foreach (var model in lst)
+                    if (appState.SelectedModel == null)
                     {
-                        var url = agv_lst.FirstOrDefault(v => v.name == model.AGV_No).url;
-                        await TimeJobService.AddToSchedule(model, url);
-                    }
+                        foreach (var model in lst)
+                        {
+                            var url = agv_lst.FirstOrDefault(v => v.name == model.AGV_No).url;
+                            await TimeJobService.AddToSchedule(model, url);
+                        }
 
+                    }
                 }
+                StateHasChanged();
             }
-            StateHasChanged();
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage("agvstatus afterrender " + ex.Message);
+            }
+
         }
 
     }
@@ -93,26 +102,38 @@
 
     private async Task MyTask()
     {
-        moveStatus = await HttpService.Execute_Get("movebase_status");
-        coordinace = await HttpService.Execute_Get("pose");
-        if (moveStatus.status == 1)
+        try
         {
-            aGVSpeed = await HttpService.Execute_Get("speed");
-            if (aGVSpeed.vx>0){
-                cur_speed = aGVSpeed.vx.ToString("0.0") + "/" + aGVSpeed.vth.ToString("0.0"); 
+            moveStatus = await HttpService.Execute_Get("movebase_status");
+            coordinace = await HttpService.Execute_Get("pose");
+            if (moveStatus.status == 1)
+            {
+                aGVSpeed = await HttpService.Execute_Get("speed");
+                if (aGVSpeed.vx > 0)
+                {
+                    cur_speed = aGVSpeed.vx.ToString("0.0") + "/" + aGVSpeed.vth.ToString("0.0");
+                }
+                if (coordinace != null)
+                    appState.SelectedModel.DrawCoordinates.Add(coordinace);
+                if (appState.SelectedModel.DrawCoordinates.Count > 1)
+                    appState.SetModel(appState.SelectedModel, ActionType.STOPPED);
+
             }
-            if (coordinace != null)
-                appState.SelectedModel.DrawCoordinates.Add(coordinace);
-            if (appState.SelectedModel.DrawCoordinates.Count > 1)
-                appState.SetModel(appState.SelectedModel, ActionType.STOPPED);
+            else
+            {
+                aGVSpeed = new AGVSpeed();
+            }
 
+
+            StateHasChanged();
         }
-        else{
-            aGVSpeed = new AGVSpeed();
+        catch (Exception ex)
+        {
+
+            LogService.LogMessage("mytask" + ex.Message);
+          
         }
-
-
-        StateHasChanged();
+      
     }
 
 

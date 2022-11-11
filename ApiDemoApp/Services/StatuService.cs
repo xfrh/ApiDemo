@@ -1,4 +1,5 @@
 ﻿using ApiDemoApp.Models;
+using System.Net.NetworkInformation;
 
 namespace ApiDemoApp.Services
 {
@@ -7,21 +8,31 @@ namespace ApiDemoApp.Services
         public static event Func<AGVCompound, Task> UpdateEvent;
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            try
             {
-                await Task.Delay(1000);
-                if(UpdateEvent != null)
+                while (!stoppingToken.IsCancellationRequested)
                 {
-                      AGVCompound aGV = new AGVCompound()
-                       {
-                        battery = await HttpService.Execute_Get("base_encode"),
-                        timer=DateTime.Now
-                       };
-                    await UpdateEvent.Invoke(aGV);
-                }
-              
+                    await Task.Delay(1000);
+                    if (UpdateEvent != null)
+                    {
+                        AGVCompound aGV = new AGVCompound()
+                        {
+                            battery = await HttpService.Execute_Get("base_encode"),
+                            timer = DateTime.Now
+                        };
+                        await UpdateEvent.Invoke(aGV);
+                    }
 
+
+                }
             }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage(ex.Message);
+             
+            }
+          
         }
     }
 }
