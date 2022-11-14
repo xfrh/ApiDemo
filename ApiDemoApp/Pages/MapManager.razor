@@ -296,7 +296,7 @@
             _isLoading = true;
             StateHasChanged();
             await Task.Delay(10);
-         
+
             var stringPayload = JsonSerializer.Serialize(new MapName(){name=name});
             var q= await HttpService.Execute_Post("apply_map", stringPayload);
             if(q=="success"){
@@ -309,15 +309,15 @@
                 map.map = await HttpService.Execute_Get("map");
             }
             else
-             {
+            {
                 snackBar.Add("应用地图失败,查看log", Severity.Error);
-             }
-          
+            }
+
             _isLoading = false;
             StateHasChanged();
 
         }
-      
+
     }
     private async void Delete(string name)
     {
@@ -329,7 +329,7 @@
         if (result != null)
         {
             var map = maps.FirstOrDefault(c => c.name == name);
-            var stringPayload = "{ \"name\":\"" + name + "\"}";
+            var stringPayload = JsonSerializer.Serialize(new MapName() { name = name });
             await HttpService.Execute_Post("delete_map", stringPayload);
             snackBar.Add("地图已删除.", Severity.Success);
             await Getmaps();

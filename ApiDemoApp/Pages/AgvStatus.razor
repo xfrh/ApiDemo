@@ -28,7 +28,7 @@
             <MudTextField @bind-Value="cur_btn"  Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.RadioButtonChecked" AdornmentColor="@btnColor" ReadOnly=true Margin="Margin.Dense" Style="width:120px" />
         }
       
-        <MudTextField @bind-Value="agv_info" Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.Info" AdornmentColor="Color.Tertiary" ReadOnly=true Margin="Margin.Dense" Style="width:200px" />
+        <MudTextField @bind-Value="agv_info" Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.Info" AdornmentColor="Color.Tertiary" ReadOnly=true Margin="Margin.Dense" Style="width:250px" />
     }
 
 </MudPaper>
@@ -197,7 +197,7 @@
                          StateHasChanged();
                      });
                     };
-                    agv_info = appState.SelectedModel.name + "," + appState.SelectedModel.type;
+                    agv_info = appState.SelectedModel.name;
                     ShowSanckBar(appState.SelectedModel.name + "开始工作");
                     break;
                 case ActionType.NAVIGATE:
