@@ -8,24 +8,33 @@ namespace ApiDemoApp.Services
 {
     public class HttpService
     {
-		public static string Base_URL { get; set; }
-        public static async Task<dynamic> Execute_Get(string cmdname)
+        public static string Base_URL { get; set; }
+        public static Dictionary<string, string> myIps = new Dictionary<string, string>();
+        public static async Task<dynamic> Execute_Get(string cmdname,string ip=null)
         {
-			try
-			{
-				using(var client = new HttpClient())
-				{
-                    string call_url = Base_URL + "/reeman/" + cmdname;
-					switch (cmdname)
-					{
-						case "pose":
-							return await client.GetFromJsonAsync<Coordinace>(call_url);
-						case "speed":
+          
+            try
+            {
+                string bb = ip == null ? Base_URL : myIps[ip];
+                string call_url = "http://" + bb + "/reeman/" + cmdname;
+                using (var client = new HttpClient())
+                {
+                
+                    switch (cmdname)
+                    {
+                        case "pose":
+                            return await client.GetFromJsonAsync<Coordinace>(call_url);
+                        case "speed":
                             return await client.GetFromJsonAsync<AGVSpeed>(call_url);
                         case "base_encode":
                             return await client.GetFromJsonAsync<Battery>(call_url);
                         case "movebase_status":
-                            return await client.GetFromJsonAsync<MoveStatus>(call_url);
+                            {
+                                var q = await client.GetFromJsonAsync<JsonObject>(call_url);
+                                var result = q["status"];
+                                return int.Parse(result.ToString());
+                            }
+
                         case "hostname":
                             return await client.GetFromJsonAsync<HostName>(call_url);
                         case "current_version":
@@ -44,8 +53,8 @@ namespace ApiDemoApp.Services
                                 var result = q["coordinates"];
                                 return JsonSerializer.Deserialize<List<List<double>>>(result.ToString());
                             }
-                           case "android_target":
-							{
+                        case "android_target":
+                            {
                                 List<TargetPointsModel> lst = new List<TargetPointsModel>();
                                 Dictionary<string, List<string>> temp_lst = await client.GetFromJsonAsync<Dictionary<string, List<string>>>(call_url);
                                 foreach (var key in temp_lst.Keys)
@@ -80,27 +89,28 @@ namespace ApiDemoApp.Services
                                 var result = lst["maps"];
                                 return JsonSerializer.Deserialize<List<MapModel>>(result.ToString());
                             }
-                         
+
                         default:
                             return "";
                     }
                 }
-			}
-			catch (Exception ex)
-			{
+            }
+            catch (Exception ex)
+            {
 
-				LogService.LogMessage("Execute_Get:" + cmdname + ex.Message);
-				return ex.Message;
-			}
+                LogService.LogMessage(ex.Message);
+                return null;
+            }
         }
 
-		public static async Task<string> Execute_Post(string cmdname,string payload)
+		public static async Task<string> Execute_Post(string cmdname,string payload,string ip=null)
 		{
             try
             {
                 using (var client = new HttpClient())
                 {
-                    string call_url = Base_URL + "/cmd/" + cmdname;
+                    string bb = ip == null ? Base_URL : myIps[ip];
+                    string call_url = "http://" + bb + "/cmd/" + cmdname;
                    var httpContent = payload == null ? null : new StringContent(payload, Encoding.UTF8, "application/json");
                     var httpResponse = await client.PostAsync(call_url, httpContent);
                    if (!httpResponse.IsSuccessStatusCode)
@@ -123,11 +133,12 @@ namespace ApiDemoApp.Services
 		}
 
 
-        public static async Task<string> UploadMap(MultipartFormDataContent content)
+        public static async Task<string> UploadMap(MultipartFormDataContent content,string ip=null)
         {
             try
             {
-                string call_url = Base_URL + "/upload/import_map";
+                string bb = ip == null ? Base_URL : myIps[ip];
+                string call_url = "http://" + bb + "/upload/import_map";
                 using (var client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -196,7 +207,7 @@ namespace ApiDemoApp.Services
         //    }
         //}
 
-        public static async Task<HttpResponseMessage> MapDownLoad(string mapName)
+        public static async Task<HttpResponseMessage> MapDownLoad(string mapName,string ip=null)
         {
           
             try
@@ -204,7 +215,8 @@ namespace ApiDemoApp.Services
             
                 using (var client = new HttpClient())
                 {
-                     string call_url = Base_URL + "/download/export_map";
+                    string bb = ip == null ? Base_URL : myIps[ip];
+                    string call_url = "http://" + bb + "/download/export_map";
                     //  var stringPayload = "{ \"name\":\"" + mapName + "\"}";
                     var stringPayload = JsonSerializer.Serialize(new MapName() { name = mapName });
                     var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");

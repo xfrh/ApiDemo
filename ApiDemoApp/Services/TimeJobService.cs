@@ -7,20 +7,18 @@ namespace ApiDemoApp.Services
 {
     public class TimeJobService
     {
-        public static async Task AddToSchedule(AGVTaskModel model, string url)
+       
+        public static async Task AddToSchedule(AGVTaskModel model)
         {
             try
             {
                     ISchedulerFactory sf = new StdSchedulerFactory();
-                     HttpService.Base_URL = "http://" + url;
+                     HttpService.Base_URL =  model.url;
                     Coordinace start_point = await HttpService.Execute_Get("pose");
-                    var scheduler = await sf.GetScheduler();
+                        var scheduler = await sf.GetScheduler();
                     IJobDetail job = JobBuilder.Create<ScheduleJobService>()
                    .WithIdentity(model.Title, model.AGV_No)
-                   .UsingJobData("url", url)
-                   .UsingJobData("target", model.TargetName)
-                   .UsingJobData("after", model.AfterTask ? null : JsonSerializer.Serialize(start_point))
-                   .UsingJobData("properties",model.properties)
+                   .UsingJobData("data", JsonSerializer.Serialize(model))
                    .Build();
 
                     var triggerKey = new TriggerKey(model.Title);
@@ -98,6 +96,9 @@ namespace ApiDemoApp.Services
                 LogService.LogMessage("AGVStatus deleteschedule:" + ex.Message);
             }
         }
+
+
+
 
     }
 }

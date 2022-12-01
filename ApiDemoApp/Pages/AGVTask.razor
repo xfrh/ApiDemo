@@ -18,13 +18,13 @@
             <DataAnnotationsValidator />
             <MudCard Outlined="true" >
                 <MudCardContent class="d-flex  flex-grow-1 gap-4">
-                    <MudItem xs="12" sm="6" md="4">
+                    <MudItem xs="12" sm="6" md="6">
                         <MudField Label="任务标题" Variant="Variant.Outlined">
                          <MudTextField  Class="mt-3" @bind-Value="model.Title" For="@(() => model.Title)" />
 
                         </MudField>
                     </MudItem>
-                       <MudItem xs="12" sm="6" md="4">
+                       <MudItem xs="12" sm="6" md="6">
                         <MudField Label="开始时间" Variant="Variant.Outlined" >
                             <MudTimePicker @bind-Time="time" />
                         </MudField>
@@ -39,7 +39,7 @@
                 <MudCardContent class="d-flex  flex-grow-1 gap-4">
                   
 
-                    <MudItem xs="12" sm="6" md="4" >
+                    <MudItem xs="12" sm="6" md="6" >
                         <MudField Label="执行模式" Variant="Variant.Outlined" InnerPadding="false">
                             <MudRadioGroup @bind-SelectedOption="model.CycleStyle">
                                 <MudRadio Option="false" Color="Color.Primary" Dense="true" >单次循环</MudRadio>
@@ -48,7 +48,7 @@
                         </MudField>
                     </MudItem>
 
-                     <MudItem xs="12" sm="6" md="4" >
+                     <MudItem xs="12" sm="6" md="6" >
                         <MudField Label="任务完成后" Variant="Variant.Outlined" InnerPadding="false">
                             <MudRadioGroup @bind-SelectedOption="model.AfterTask" >
                                 <MudRadio Option="false" Dense="true" >返回开始点</MudRadio>
@@ -60,7 +60,7 @@
             </MudCard>
             <MudCard>
                 <MudCardContent class="d-flex  flex-grow-1 gap-4">
-                    <MudItem xs="12" sm="6" md="4">
+                    <MudItem xs="12" sm="6" md="6">
                      
                            <MudSelect T="string" Label="重复" MultiSelection="true" @bind-Value="week_value" @bind-SelectedValues="model.WeekOptions">
                             @foreach (var wkday in wkDays)
@@ -70,7 +70,7 @@
                         </MudSelect>
                          <ValidationMessage For="@(() => model.WeekOptions)" />
                     </MudItem>
-                       <MudItem xs="12" sm="6" md="4">
+                       <MudItem xs="12" sm="6" md="6">
                         <MudSelect Label="目标点" MultiSelection="true" @bind-Value="target_value" @bind-SelectedValues="model.TargetOptions">
                             @foreach (var target in targets)
                             {
@@ -111,7 +111,10 @@
 
                 </RowTemplate>
             </MudTable>
+                <MudSwitch T="bool" Label="开启监控" Color="Color.Info" Disabled="_isMonitor" CheckedChanged="ClickHandler" />
+               
         </MudPaper>
+       
     </MudItem>
 
 </MudGrid>
@@ -127,6 +130,7 @@
     List<string> targets = new List<string>();
     private List<AGVProperties> lst_properties = new List<AGVProperties>();
     private bool _loading;
+    private bool _isMonitor;
     AGVTaskModel _selectedItem;
     bool success;
     private MudTable<AGVTaskModel> mudTable;
@@ -145,6 +149,7 @@
     {
         if (firstRender)
         {
+
             targets.Clear();
             start_point = await HttpService.Execute_Get("pose");
             lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
@@ -154,12 +159,17 @@
                 targets.Add(p.name);
             if (lst == null)
                 lst = new List<AGVTaskModel>();
+            _isMonitor = lst.Count == 0;
             foreach (var model in lst)
                 TimeJobService.EditShowList(model);
+
+
             StateHasChanged();
         }
 
     }
+
+
 
     private async void OnValidSubmit(EditContext context)
     {
@@ -199,27 +209,33 @@
 
         string temp = "";
         model.AGV_No = appState.SelectedModel.name;
+        model.Mark = appState.SelectedModel.Mark;
         model.StartTime = time;
         model.TargetName="";
-
+        
         foreach(var item in model.TargetOptions){
             temp += item + ",";
         }
+        model.url = appState.SelectedModel.url;
         model.TargetName = temp.TrimEnd(',');
         model.properties = JsonSerializer.Serialize(lst_properties);
         TimeJobService.EditShowList(model);
         lst.Add(model);
         await localStorage.SetItemAsync<List<AGVTaskModel>>("agv_task", lst);
-
+        _isMonitor = false;
         appState.SetModel(appState.SelectedModel, ActionType.ADDTASK);
-        await TimeJobService.AddToSchedule(model,appState.SelectedModel.url);
+        await TimeJobService.AddToSchedule(model);
         await this.InvokeAsync(() => this.StateHasChanged());
         model = new AGVTaskModel();
 
     }
-
-
-
+    void ClickHandler(bool value)
+    {
+        if (value)
+            appState.SetModel(appState.SelectedModel, ActionType.WATCHLIST);
+    }
+  
+ 
 
     private async void RowClick(TableRowClickEventArgs<AGVTaskModel> tableRowClickEventArgs)
     {
@@ -236,9 +252,11 @@
                 if (q != null)
                 {
                     lst.Remove(q);
-                    if (lst.Count == 0)
+                    if (lst.Count == 0){
                         await localStorage.RemoveItemAsync("agv_task");
-                    else
+                        _isMonitor = true;
+                    }
+                   else
                         await localStorage.SetItemAsync<List<AGVTaskModel>>("agv_task", lst);
 
                     await TimeJobService.DeleteSchedule(q.Title);

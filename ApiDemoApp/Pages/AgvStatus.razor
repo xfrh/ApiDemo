@@ -10,7 +10,7 @@
 <MudPaper Class="d-flex flex-row flex-grow-1 gap-1" Elevation="0">
     @if (appState.SelectedModel == null)
     {
-        <MudTextField T="string"  Label="还未选择机器人" Variant="Variant.Text" Margin="Margin.Dense" Style="align-content:center;width:120px" ></MudTextField>
+        <MudTextField T="string" Label="还未选择机器人" Variant="Variant.Text" Margin="Margin.Dense" Style="align-content:center;width:120px"></MudTextField>
     }
     else
     {
@@ -18,16 +18,15 @@
         @if (lst != null && lst.Count > 0)
         {
             <MudTextField @bind-Value="cur_time" Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Outlined.Timer" AdornmentColor="Color.Warning" ReadOnly=true Margin="Margin.Dense" Style="width:100px" />
-         }
+        }
         <MudTextField @bind-Value="cur_Battery" Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.BatteryChargingFull" AdornmentColor="Color.Info" ReadOnly=true Margin="Margin.Dense" Style="width:100px" />
         <MudTextField @bind-Value="cur_flag" Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.Speed" AdornmentColor="Color.Secondary" ReadOnly=true Margin="Margin.Dense" Style="width:120px" />
-        if(aGVSpeed!=null && aGVSpeed.vx>0){
+       @if(aGVSpeed!=null && aGVSpeed.vx>0){
             <MudTextField @bind-Value="cur_speed" Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.ShutterSpeed" AdornmentColor="Color.Error" ReadOnly=true Margin="Margin.Dense" Style="width:120px" />
         }
         else{
             <MudTextField @bind-Value="cur_btn"  Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.RadioButtonChecked" AdornmentColor="@btnColor" ReadOnly=true Margin="Margin.Dense" Style="width:120px" />
-        }
-      
+        }  
         <MudTextField @bind-Value="agv_info" Variant="Variant.Text" Adornment="Adornment.Start" AdornmentIcon="@Icons.Filled.Info" AdornmentColor="Color.Tertiary" ReadOnly=true Margin="Margin.Dense" Style="width:250px" />
     }
 
@@ -39,58 +38,23 @@
     string cur_btn;
     string cur_speed;
     string agv_info;
-
     Color btnColor;
     MoveStatus moveStatus;
     Coordinace coordinace;
     AGVSpeed aGVSpeed;
     List<AGVTaskModel> lst;
-    List<AGVProperties> lst_properties;
     protected override void OnInitialized()
     {
-        appState.OnChange += ReceivedModel;
 
+        appState.OnChange += ReceivedModel;
+        StatuService.UpdateEvent += RegisterTimeService;
+        NavTaskService.UpdateStatus += OnNaviDataArrival;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            try
-            {
-                lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
-                lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
-                var agv_lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
-                if (agv_lst!=null && lst != null && lst.Count > 0)
-                {
-                    if (appState.SelectedModel == null)
-                    {
-                        foreach (var model in lst)
-                        {
-                            var url = agv_lst.FirstOrDefault(v => v.name == model.AGV_No).url;
-                            await TimeJobService.AddToSchedule(model, url);
-                        }
-
-                    }
-                }
-                StateHasChanged();
-            }
-            catch (Exception ex)
-            {
-
-                LogService.LogMessage("agvstatus afterrender " + ex.Message);
-            }
-
-        }
-
-    }
-
-
-
-    public void Dispose()
-    {
-        appState.OnChange -= ReceivedModel;
-
+        lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
+        StateHasChanged();
     }
 
     void ShowSanckBar(string message)
@@ -100,62 +64,103 @@
         Snackbar.Add(message, Severity.Normal);
     }
 
-    private async Task MyTask()
+
+    public void Dispose()
+    {
+        appState.OnChange -= ReceivedModel;
+        NavTaskService.UpdateStatus -= OnNaviDataArrival;
+        StatuService.UpdateEvent -= RegisterTimeService;
+    }
+
+    private async Task Process_DrawandSpeed(MoveStatus pair)
     {
         try
         {
-            moveStatus = await HttpService.Execute_Get("movebase_status");
-            coordinace = await HttpService.Execute_Get("pose");
-            if (moveStatus.status == 1)
+            if (pair != null)
             {
-                aGVSpeed = await HttpService.Execute_Get("speed");
-                if (aGVSpeed.vx > 0)
+
+                switch (pair.status)
                 {
-                    cur_speed = aGVSpeed.vx.ToString("0.0") + "/" + aGVSpeed.vth.ToString("0.0");
+                    case 1:
+                        {
+                            if (pair.Name == appState.SelectedModel.name)
+                            {
+                                appState.SelectedModel.cur_target = NavTaskService.routes[pair.Name].Peek();
+                                aGVSpeed = await HttpService.Execute_Get("speed");
+                                if(aGVSpeed!=null){
+                                    if (aGVSpeed.vx > 0)
+                                    {
+                                        cur_speed = aGVSpeed.vx.ToString("0.0") + "/" + aGVSpeed.vth.ToString("0.0");
+                                        await InvokeAsync(StateHasChanged);
+                                    }
+                                }
+                                coordinace = await HttpService.Execute_Get("pose");
+                                if (coordinace != null)
+                                    appState.SelectedModel.DrawCoordinates.Add(coordinace);
+                                if (appState.SelectedModel.DrawCoordinates.Count > 1)
+                                    appState.SetModel(appState.SelectedModel, ActionType.STOPPED);
+                            }
+                            else
+                            {
+                                aGVSpeed = new AGVSpeed();
+                                await InvokeAsync(StateHasChanged);
+                            }
+                        }
+                        break;
+                    case 3:
+                        if (pair.Name == appState.SelectedModel.name)
+                        {
+                            ShowSanckBar("完成" + appState.SelectedModel.cur_target + " 目标点导航");
+                        }
+                        if (NavTaskService.routes.ContainsKey(pair.Name))
+                        {
+                            if (NavTaskService.routes[pair.Name].Count > 0)
+                            {
+
+                                NavTaskService.routes[pair.Name].Dequeue();
+                                if (NavTaskService.routes[pair.Name].Count > 0)
+                                    await Process_Naviage(pair);
+                                else
+                                    SendCompleted(pair);
+                            }
+                        }
+
+                        break;
+
                 }
-                if (coordinace != null)
-                    appState.SelectedModel.DrawCoordinates.Add(coordinace);
-                if (appState.SelectedModel.DrawCoordinates.Count > 1)
-                    appState.SetModel(appState.SelectedModel, ActionType.STOPPED);
-
-            }
-            else
-            {
-                aGVSpeed = new AGVSpeed();
             }
 
-
-            StateHasChanged();
         }
         catch (Exception ex)
         {
 
-            LogService.LogMessage("mytask" + ex.Message);
-          
+            LogService.LogMessage("Process_DrawandSpeed" + ex.Message);
         }
-      
+
     }
 
+    void SendCompleted(MoveStatus pair){
 
-    async void Report_Progress()
-    {
-        while (moveStatus.status != 1)
-        {
-            await MyTask();
-            if (moveStatus.status == 2) break;
-            Thread.Sleep(1000);
-        }
-        while (moveStatus.status == 1)
-        {
-            await MyTask();
-            if (moveStatus.status == 2) break;
-            Thread.Sleep(1000);
-        }
-        if (moveStatus.status == 3)
+        NavTaskService.routes.Remove(pair.Name);
+        if (pair.Name == appState.SelectedModel.name){
+            appState.SelectedModel.cur_target = "";
             appState.SetModel(appState.SelectedModel, ActionType.COMPLETE);
+        }
+          
     }
 
+    private async Task Process_Naviage(MoveStatus pair)
+    {
+        if(NavTaskService.routes.ContainsKey(pair.Name)){
+            if (NavTaskService.routes[pair.Name].Count > 0) {
+                string target = NavTaskService.routes[pair.Name].Peek();
+                string payload = JsonSerializer.Serialize(new TargetName() { point = target });
+                await HttpService.Execute_Post("nav_point", payload, pair.Name);
 
+            }
+
+        }
+    }
 
     public async void ReceivedModel()
     {
@@ -164,112 +169,152 @@
             switch (appState.SelectedType)
             {
                 case ActionType.SELECTED:
-                    await MyTask();
-                    StatuService.UpdateEvent += async agv =>
-                    {
-                        await InvokeAsync(() =>
-                     {
-
-                         cur_time = agv.timer.ToLongTimeString();
-                         cur_Battery = " 电量:" + agv.battery.battery.ToString();
-                         switch(agv.battery.chargeFlag){
-                             case 2:
-                                 cur_flag = "充电桩充电";
-                                 break;
-                             case 3:
-                                 cur_flag="适配器充电";
-                                 break;
-                             case 8:
-                                 cur_flag="对接充电桩";
-                                 break;
-                             default:
-                                 cur_flag = "非充电";
-                                 break;
-                         }
-                         if(agv.battery.emergencyButton==0){
-                             cur_btn="急停按下";
-                             btnColor = Color.Error;
-                         }
-                         else if(agv.battery.emergencyButton==1){
-                             cur_btn = "急停弹起";
-                             btnColor = Color.Success;
-                         }
-                         StateHasChanged();
-                     });
-                    };
                     agv_info = appState.SelectedModel.name;
                     ShowSanckBar(appState.SelectedModel.name + "开始工作");
                     break;
                 case ActionType.NAVIGATE:
-                    {
-
-                        string payload = JsonSerializer.Serialize(new TargetName() { point = appState.SelectedModel.cur_target });
-                        await HttpService.Execute_Post("nav_point", payload);
-                        if (lst_properties != null)
-                        {
-                            var q = lst_properties.FirstOrDefault(v => v.Targetname == appState.SelectedModel.cur_target);
-                            if (q != null)
-                            {
-                                if (q.isLockedOnLeave)
-                                    await HttpService.Execute_Post("lock", null);
-                            }
-                        }
-                        Report_Progress();
-
+                    if(NavTaskService.routes.ContainsKey(appState.SelectedModel.name)){
+                        await Process_Naviage(new MoveStatus(){
+                            Name=appState.SelectedModel.name,
+                            status=0
+                        });
                     }
-
-                    break;
-                case ActionType.RESUME:
-                    await HttpService.Execute_Post("resume_nav", null);
-                    ShowSanckBar("导航正在被恢复...");
-                    Report_Progress();
+                    ShowSanckBar("开始导航");
                     break;
                 case ActionType.CANCEL:
                     await HttpService.Execute_Post("cancel_goal", null);
+                    if(NavTaskService.routes.ContainsKey(appState.SelectedModel.name))
+                    {
+                        NavTaskService.routes.Remove(appState.SelectedModel.name);
+                        if (aGVSpeed != null){
+                            aGVSpeed = null;
+                            StateHasChanged();
+                        }
+                    }
+                    appState.SelectedModel.cur_target = "";
                     ShowSanckBar("导航被取消");
+
                     break;
                 case ActionType.PAUSE:
                     await HttpService.Execute_Post("cancel_goal", null);
                     ShowSanckBar("导航被暂停");
                     break;
-                case ActionType.COMPLETE:
-                    ShowSanckBar(appState.SelectedModel.cur_target + " 导航完成");
+                case ActionType.RESUME:
+                    await HttpService.Execute_Post("resume_nav", null);
+                    ShowSanckBar("导航正在被恢复...");
                     break;
                 case ActionType.CHARGE:
+
                     Charge charge = new Charge()
-                        {
-                            type = 1,
-                            point = "充电桩"
-                        };
+                            {
+                                type = 1,
+                                point = "充电桩"
+                            };
+
                     var stringPayload = JsonSerializer.Serialize(charge);
                     await HttpService.Execute_Post("charge", stringPayload);
                     ShowSanckBar("开始导航充电");
-                    Report_Progress();
+
                     break;
                 case ActionType.ADDTASK:
                     lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
-                    await this.InvokeAsync(() => this.StateHasChanged());
+                    if(lst!=null){
+                        foreach (var item in lst)
+                        {
+                            if (!HttpService.myIps.ContainsKey(item.AGV_No))
+                                HttpService.myIps.TryAdd(item.AGV_No, item.url);
+                        }
+                        await this.InvokeAsync(() => this.StateHasChanged());
+                    }
+
                     break;
                 case ActionType.MANUL:
                     {
                         string payload = JsonSerializer.Serialize(appState.SelectedModel.SelectedAGVSpeed);
                         await HttpService.Execute_Post("speed", payload);
-                        Report_Progress();
                         if(appState.SelectedModel.SelectedAGVSpeed.vx==0 && appState.SelectedModel.SelectedAGVSpeed.vth==0)
                         {
+                            appState.SetModel(appState.SelectedModel, ActionType.STOPPED);
                             ShowSanckBar("停止运行");
                         }
                         else{
                             ShowSanckBar("开始移动小车");
                         }
-                      
-
                     }
-                 
+                    break;
+                case ActionType.COMPLETE:
+                    if (aGVSpeed != null){
+                        aGVSpeed = null;
+                        await this.InvokeAsync(() => this.StateHasChanged());
+                    }
+                  
+                    ShowSanckBar("导航完成");
                     break;
 
             }
         }
-
     }
+
+    private async Task OnNaviDataArrival(MoveStatus pair)
+    {
+        try
+        {
+            await Process_DrawandSpeed(pair);
+           
+
+        }
+        catch (Exception ex)
+        {
+            
+            LogService.LogMessage("OnNaviDataArrival " + ex.Message);
+        }
+    }
+
+
+    private async Task RegisterTimeService(AGVCompound agv)
+    {
+        try
+        {
+         cur_time = agv.timer.ToLongTimeString();
+        if (appState.SelectedModel != null)
+            agv_info = appState.SelectedModel.name;
+        if (agv.battery != null)
+        {
+            cur_Battery = " 电量:" + agv.battery.battery.ToString();
+            switch (agv.battery.chargeFlag)
+            {
+                case 2:
+                    cur_flag = "充电桩充电";
+                    break;
+                case 3:
+                    cur_flag = "适配器充电";
+                    break;
+                case 8:
+                    cur_flag = "对接充电桩";
+                    break;
+                default:
+                    cur_flag = "非充电";
+                    break;
+            }
+            if (agv.battery.emergencyButton == 0)
+            {
+                cur_btn = "急停按下";
+                btnColor = Color.Error;
+            }
+            else if (agv.battery.emergencyButton == 1)
+            {
+                cur_btn = "急停弹起";
+                btnColor = Color.Success;
+            }
+        }
+        await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+
+            LogService.LogMessage("RegisterTimeService" + ex.Message);
+        }
+    }
+}
+   
 }

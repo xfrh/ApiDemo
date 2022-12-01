@@ -118,7 +118,7 @@
     private async Task<List<MapModel>>  Getmaps()
     {
         if (string.IsNullOrEmpty(HttpService.Base_URL))
-            HttpService.Base_URL = "http://" + appState.SelectedModel.url;
+            HttpService.Base_URL =  appState.SelectedModel.url;
         maps = await HttpService.Execute_Get("history_map");
         return maps;
     }

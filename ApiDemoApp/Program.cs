@@ -8,6 +8,7 @@ using Quartz.Impl;
 using Quartz;
 using Quartz.Spi;
 using BlazorDownloadFile;
+using ApiDemoApp.Events;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services.AddSingleton<AppState>();
 builder.Services.AddMudServices();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddHostedService<StatuService>();
+builder.Services.AddHostedService<NavTaskService>();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
 

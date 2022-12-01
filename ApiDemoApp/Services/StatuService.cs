@@ -12,18 +12,17 @@ namespace ApiDemoApp.Services
             {
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    await Task.Delay(1000);
-                    if (UpdateEvent != null)
+                    if (!string.IsNullOrEmpty(HttpService.Base_URL))
                     {
                         AGVCompound aGV = new AGVCompound()
                         {
                             battery = await HttpService.Execute_Get("base_encode"),
-                            timer = DateTime.Now
+                            timer = DateTime.Now,
+
                         };
-                        await UpdateEvent.Invoke(aGV);
+                        await UpdateEvent?.Invoke(aGV);
                     }
-
-
+                    await Task.Delay(1000); 
                 }
             }
             catch (Exception ex)

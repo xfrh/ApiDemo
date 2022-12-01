@@ -2,24 +2,24 @@
 @using ApiDemoApp.Models
 @using ApiDemoApp.Services
 @inject AppState appState
-
+@inject IJSRuntime JSRuntime
 @inject NavigationManager _navigationManager
 @implements IDisposable;
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 <MudPaper Class="pa-4 mr-16" Elevation="0">
 
-    <MudList Clickable=true  >
-        @foreach(var model in lst)
+    <MudList Clickable=true >
+         @foreach (var model in lst)
         {
-            <MudListItem Avatar="@Icons.Material.Filled.Image" Value=@model.url Text=@model.name Tag=@model.type OnClick="()=>ItemSelected(model)" />
+            <MudListItem Avatar="@Icons.Material.Filled.Image"  Value=@model.url Text=@model.name Tag=@model.type OnClick="()=>ItemSelected(model)" />
         }
+   
   </MudList>
 </MudPaper>
 
 @code {
     List<RegisterAGVFrom> lst =new List<RegisterAGVFrom>();
-
-
+   
     protected override void OnInitialized()
     {
         appState.OnChange += ReceiveData;
@@ -29,9 +29,11 @@
     {
         if (firstRender)
         {
+
             lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
             if (lst == null)
                 lst = new List<RegisterAGVFrom>();
+
             StateHasChanged();
 
         }
@@ -47,21 +49,36 @@
     public async void ReceiveData()
     {
         if (appState.SelectedModel != null) {
-            if (appState.SelectedType == ActionType.ADD)
+            switch(appState.SelectedType)
             {
-                lst.Add(appState.SelectedModel);
-                appState.SelectedModel = null;
-                StateHasChanged();
-            }
-            else if (appState.SelectedType == ActionType.DELETE)
-            {
-                var q = lst.FirstOrDefault(v => v.name == appState.SelectedModel.name);
-                if (q != null)
-                    lst.Remove(q);
-                StateHasChanged();
-            }
-          
+              
+                case ActionType.ADD:
+                    {
+                        lst.Add(appState.SelectedModel);
+                        if(!HttpService.myIps.ContainsKey(appState.SelectedModel.name))
+                            HttpService.myIps.TryAdd(appState.SelectedModel.name, appState.SelectedModel.url);
+                        appState.SelectedModel = null;
+                        StateHasChanged();
+                    }
+                    break;
+                case ActionType.DELETE:
+                    {
+                        var q = lst.FirstOrDefault(v => v.name == appState.SelectedModel.name);
+                        if (q != null)
+                        {
+                            lst.Remove(q);
+                            if (NavTaskService.routes.ContainsKey(q.name))
+                                NavTaskService.routes.Remove(q.name);
+                            if (HttpService.myIps.ContainsKey(q.name))
+                                HttpService.myIps.Remove(q.name);
+                            appState.SelectedModel = null;
+                            StateHasChanged();
+                        }
+                    }
 
+                    break;
+
+            }
         }
 
 
@@ -69,28 +86,16 @@
 
     async void ItemSelected(RegisterAGVFrom _model)
     {
-        HttpService.Base_URL = "http://" + _model.url;
+
+        HttpService.Base_URL = _model.url;
         _model.DrawCoordinates = new List<Coordinace>();
-        _model.routes = new Queue<string>();
         appState.SetModel(_model, ActionType.SELECTED);
         _navigationManager.NavigateTo("/map");
+      
+
     }
 
 
-    //private async void OnSelectedItemChanged(MudListItem item)
-    //{
-    //    _selectedItem = item;
-    //    RegisterAGVFrom _model =new RegisterAGVFrom();
-    //    _model.name = _selectedItem.Text;
-    //    _model.url = _selectedItem.Value.ToString();
-    //    _model.type = _selectedItem.Tag.ToString();
-    //    _model.DrawCoordinates = new List<Coordinace>();
-    //    _model.SelectedAGVSpeed = new AGVSpeed();
-    //    _model.routes = new Queue<string>();
-
-        
-       
-
-    //}
+  
 
 }

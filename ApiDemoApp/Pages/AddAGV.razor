@@ -65,7 +65,7 @@
     RegisterAGVFrom _selectedItem;
     bool success;
     private MudTable<RegisterAGVFrom> mudTable;
-
+    int agvCount = 0;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -73,6 +73,7 @@
             lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
             if (lst == null)
                 lst = new List<RegisterAGVFrom>();
+            agvCount = lst.Count;
             StateHasChanged();
         }
 
@@ -81,6 +82,7 @@
     private async void OnValidSubmit(EditContext context)
     {
         success = true;
+        model.Mark = lst.Count + 1;
         StateHasChanged();
         lst.Add(model);
         appState.SetModel(model, Services.ActionType.ADD);
@@ -99,7 +101,7 @@
             {
                 if (!string.IsNullOrEmpty(model.url))
                 {
-                    HttpService.Base_URL = "http://" + model.url;
+                    HttpService.Base_URL =  model.url;
                     HostName hostname = await HttpService.Execute_Get("hostname");
 
                     if (hostname != null)
@@ -114,10 +116,10 @@
         }
         catch (Exception ex)
         {
-            
+
             LogService.LogMessage("addagv" + ex.Message);
         }
-      
+
     }
 
 
@@ -129,7 +131,7 @@
             {
                 if (!string.IsNullOrEmpty(model.url))
                 {
-                    HttpService.Base_URL = "http://" + model.url;
+                    HttpService.Base_URL =  model.url;
                     VersionName versionName = await HttpService.Execute_Get("current_version");
                     if (versionName != null)
                     {
@@ -146,14 +148,14 @@
 
             LogService.LogMessage("addagv" + ex.Message);
         }
-       
+
     }
     private async void RowClick(TableRowClickEventArgs<RegisterAGVFrom> tableRowClickEventArgs)
     {
         RegisterAGVFrom registerAGVFrom = tableRowClickEventArgs.Item;
         bool? result = await DialogService.ShowMessageBox(
            "警告", 
-           "确实要删除该小车吗!", 
+           "确实要删除该机器人吗!", 
            yesText:"Delete!", cancelText:"Cancel");
         if (result != null)
         {

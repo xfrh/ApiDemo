@@ -1,6 +1,7 @@
 ﻿@using ApiDemoApp.Pages
 @using ApiDemoApp.Models
 @using ApiDemoApp.Services
+@using ApiDemoApp.Events;
 @inject AppState appState
 @implements IDisposable
 @inherits LayoutComponentBase
@@ -12,9 +13,10 @@
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 <MudLayout>
+ 
     <MudAppBar Elevation="1" Color="Color.Transparent">
 
-           <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0">
+           <MudPaper Class="d-flex flex-row flex-grow-1 gap-4" Elevation="0" >
            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" Disabled="@notLogin" />
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.Navigation" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer" Disabled="@notLogin">坐标导航</MudButton>
             <MudButton Variant="Variant.Filled" StartIcon="@Icons.Filled.MoveUp" IconColor="Color.Inherit" Size="Size.Small" OnClick="@ToggleRightDrawer2" Disabled="@notLogin">移动小车</MudButton>
@@ -71,7 +73,7 @@
             }
                
         </MudDrawer>
-
+     
     <MudMainContent>
         <ErrorBoundary>
             <ChildContent>
@@ -89,16 +91,75 @@
     bool openRight = false;
     bool notLogin = true;
     bool targetPoint_Nav = true;
+    bool isNormal = true;
     string drawerWidth;
     RegisterAGVFrom model;
     User login_user;
+    List<AGVTaskModel> lst;
+    List<AGVProperties> lst_properties;
     protected override void OnInitialized()
     {
         model = appState.SelectedModel;
         appState.OnChange += ReceivedModel;
-
+        EventBase.navigateTrigger += RegisterNavTrigger;
     }
 
+
+
+    async void RegisterNavTrigger(object sender, EventArgs m){
+        if(isNormal){
+            List<RegisterAGVFrom> agv_lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
+            AGVTaskModel avt = (AGVTaskModel)m;
+            var p = agv_lst.FirstOrDefault(v => v.name == avt.AGV_No);
+            if (p != null)
+            {
+                if(NavTaskService.routes.ContainsKey(p.name)) return;
+
+                if(appState.SelectedModel!=p){
+                    appState.SelectedModel = p;
+                    appState.SetModel(p, ActionType.SELECTED);
+                }
+                appState.SelectedModel = p;
+                appState.SelectedModel.DrawCoordinates = new List<Coordinace>();
+                appState.SelectedModel.cur_target = "";
+                HttpService.Base_URL = p.url;
+                NavTaskService.routes.TryAdd(avt.AGV_No, avt.routes);
+                if (!HttpService.myIps.ContainsKey(avt.AGV_No))
+                    HttpService.myIps.TryAdd(avt.AGV_No, avt.url);
+                appState.SetModel(appState.SelectedModel, ActionType.NAVIGATE);
+
+                _navigationManager.NavigateTo("/map");
+            }
+
+
+        }
+    }
+
+    private async Task InitJob()
+    {
+        try
+        {
+            lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
+            lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
+            var agv_lst = await localStorage.GetItemAsync<List<RegisterAGVFrom>>("agv_table");
+            if (agv_lst != null && lst != null && lst.Count > 0)
+            {
+                if (appState.SelectedModel == null)
+                {
+                    foreach (var model in lst)
+                    {
+                        await TimeJobService.AddToSchedule(model);
+                    }
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+
+            LogService.LogMessage("initjob at mainlayout " + ex.Message);
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -109,7 +170,7 @@
             {
                 var en = Enum.Parse<TestUserType>(login_user.Role);
                 var authState = await ((TestAuthenticationStateProvider)_authState).ChangeUser(en);
-
+                await InitJob();
             }
             var authenticationState = await _authState.GetAuthenticationStateAsync();
             if(authenticationState.User!=null && authenticationState.User.Identity.IsAuthenticated)
@@ -117,6 +178,8 @@
                 notLogin =false;
                 StateHasChanged();
             }
+
+         
         }
 
     }
@@ -124,6 +187,7 @@
     public void Dispose()
     {
         appState.OnChange -= ReceivedModel;
+        EventBase.navigateTrigger -= RegisterNavTrigger;
     }
 
     void DrawerToggle()
@@ -136,6 +200,7 @@
     void CancelNav()
     {
         if (appState.SelectedModel == null) return;
+        if (!isNormal) return;
         appState.SetModel(model, ActionType.CANCEL);
         StateHasChanged();
 
@@ -145,6 +210,7 @@
     void NavCharge()
     {
         if (appState.SelectedModel == null) return;
+        if (!isNormal) return;
         appState.SetModel(model,ActionType.COMPLETE);
         ToggleRightDrawer();
         StateHasChanged();
@@ -153,6 +219,7 @@
 
     void UserManager()
     {
+        if (!isNormal) return;
         // appState.SelectedModel = null;
         _navigationManager.NavigateTo("/usermanager",false);
     }
@@ -160,12 +227,14 @@
     void MapManager()
     {
         if (appState.SelectedModel == null) return;
+        if (!isNormal) return;
         _navigationManager.NavigateTo("/mapmanager", false);
     }
 
     void TaskManager()
     {
         if (appState.SelectedModel == null) return;
+        if (!isNormal) return;
         _navigationManager.NavigateTo("/taskmanager");
     }
 
@@ -174,11 +243,23 @@
         if (appState.SelectedModel != null)
         {
             model=appState.SelectedModel;
-            //if(appState.SelectedType == ActionType.NAVIGATE || appState.SelectedType==ActionType.CANCEL)
-            //{
-            //    ToggleRightDrawer();
-            //    StateHasChanged();
-            //}
+            if(appState.SelectedType == ActionType.SELECTED)
+            {
+                if(isNormal==false){
+                    isNormal = true;
+                    _navigationManager.NavigateTo("/map");
+                    StateHasChanged();
+
+                }
+              
+            }
+            if(appState.SelectedType==ActionType.WATCHLIST){
+
+                isNormal = false;
+                _navigationManager.NavigateTo("/scheduler");
+                StateHasChanged();
+
+           }
 
         }
 
@@ -187,6 +268,7 @@
     void ToggleRightDrawer()
     {
         if (appState.SelectedModel == null) return;
+        if (!isNormal) return;
         targetPoint_Nav = true;
         drawerWidth = "450px";
         openRight = !openRight;
@@ -195,6 +277,7 @@
     void ToggleRightDrawer2()
     {
         if (appState.SelectedModel == null) return;
+        if (!isNormal) return;
         appState.SelectedModel.DrawCoordinates.Clear();
         targetPoint_Nav = false;
         drawerWidth = "300px";

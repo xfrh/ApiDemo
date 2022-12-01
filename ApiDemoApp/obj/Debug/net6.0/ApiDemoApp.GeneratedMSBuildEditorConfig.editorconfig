@@ -35,6 +35,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQUdWTWFwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AGVMoinitor.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQUdWTW9pbml0b3IucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/AGVStatus.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQUdWU3RhdHVzLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
@@ -73,6 +77,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/UserManager.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXNlck1hbmFnZXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/ApiDemo/ApiDemo/ApiDemoApp/Pages/Watchlist.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcV2F0Y2hsaXN0LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [D:/ApiDemo/ApiDemo/ApiDemoApp/Shared/SurveyPrompt.razor]

@@ -33,6 +33,10 @@
         public List<List<double>> polygon { get; set; }
     }
 
- 
+    public class StatusPair : EventArgs
+    {
+        public string agv_name { get; set; }
+        public MoveStatus status { get; set; }
+    }
 
 }

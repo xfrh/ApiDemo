@@ -2,6 +2,7 @@
 @attribute [Authorize(Roles="Admin,User")]
 @using ApiDemoApp.Models
 @using ApiDemoApp.Services
+@using ApiDemoApp.Events
 @using SixLabors.Fonts
 @using SixLabors.ImageSharp
 @using SixLabors.ImageSharp.Drawing
@@ -10,17 +11,12 @@
 @using SixLabors.ImageSharp.Drawing.Processing;
 @inject AppState appState;
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
-
 @implements IDisposable;
-  <MudPaper Height="400px" Width="100%" Elevation="0"  Class=" mt-16">
+  <MudPaper Height="400px" Width="100%" Elevation="0"  Class="pa-6 mt-16">
      <MudContainer MaxWidth="MaxWidth.Medium"  >
-          <MudPaper Height="60px" Width="100%" Square="true" >
-            <MudFab StartIcon="@Icons.Filled.Bookmark" Label="显示设定的目标坐标" OnClick="async()=> {await ProcessMap();}" Disabled="@btnDisabled"/>
-         </MudPaper>
-        
-            <MudPaper Height="400px" Width="100%" Square="true" Elevation="0">
+           <MudPaper Height="400px" Width="100%" Square="true" Elevation="0">
             <MudElement @bind-Ref="_mudImag" HtmlTag="input" Style="visibility:hidden" />
-            <MudImage Src="@mapLayer.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height" @onmousedown="@Mouse_Move"   />
+            <MudImage Src="@mapLayer.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height" onmousedown="@Mouse_Move"   />
          </MudPaper>
       
       
@@ -46,35 +42,62 @@
     private  double TOP_PADDING = 0;
     [Inject] private IDialogService DialogService { get; set; }
     MapLayer mapLayer=new MapLayer();
-    bool btnDisabled = true;
     Dictionary<string, Coordinace> lst;
     ElementReference _mudImag = new ElementReference();
     Coordinace coordinace;
     public bool _isOpen;
     AGVProperties aGVProperties;
     List<AGVProperties> lst_properties;
+    string agv_name;
 
-    protected async override Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if(firstRender){
-            mapLayer = await HttpService.Execute_Get("map");
-            lst = new Dictionary<string, Coordinace>();
-            lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
-            if (lst_properties == null)
-                lst_properties = new List<AGVProperties>();
-            btnDisabled = mapLayer.image_url == null;
-            await GetDimensions();
-            appState.OnChange += ReceiveData;
-            await InvokeAsync(StateHasChanged);
+        mapLayer = await HttpService.Execute_Get("map");
+        mapLayer.image_url = await MapService.ProcessMap(new AGVTaskModel() { url = appState.SelectedModel.url });
+        InitProperties();
+        await GetDimensions();
+        appState.OnChange += ReceiveData;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    async void InitProperties(){
+        lst = new Dictionary<string, Coordinace>();
+        lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
+        await LoadTargets();
+        if (lst_properties == null)
+            lst_properties = new List<AGVProperties>();
+    }
+    async Task LoadTargets(){
+
+        List<TargetPointsModel> targetPointsModels = await HttpService.Execute_Get("android_target");
+        foreach (var item in targetPointsModels)
+        {
+            var px = (item.coordinace.x - mapLayer.origin_x) * 20;
+            var py = mapLayer.height - ((item.coordinace.y - mapLayer.origin_y) * 20);
+            lst.TryAdd(item.name, new Coordinace() { x = px, y = py });
         }
+
+
     }
 
     async Task GetDimensions()
     {
         //  var dimension = await Service.GetDimensions(_mudImag);
-        var result =await _mudImag.MudGetBoundingClientRectAsync();
-        LEFT_PADDING= result.AbsoluteLeft;
-        TOP_PADDING = result.AbsoluteTop;
+        try
+        {
+            var result = await _mudImag.MudGetBoundingClientRectAsync();
+            if(result!=null){
+                LEFT_PADDING = result.AbsoluteLeft;
+                TOP_PADDING = result.AbsoluteTop;
+            }
+
+        }
+        catch (Exception)
+        {
+
+
+        }
+
     }
 
 
@@ -117,14 +140,15 @@
     }
     protected async void Mouse_Move(MouseEventArgs e)
     {
-
-        foreach(var key in lst.Keys){
-            double tx=e.ClientX - LEFT_PADDING;
-            double ty= e.ClientY - TOP_PADDING;
-            if(Math.Abs(tx-lst[key].x)<30 && Math.Abs(ty-lst[key].y)<30)
+        foreach (var key in lst.Keys)
+        {
+            double tx = e.ClientX - LEFT_PADDING;
+            double ty = e.ClientY - TOP_PADDING;
+            if (Math.Abs(tx - lst[key].x) < 30 && Math.Abs(ty - lst[key].y) < 30)
             {
                 aGVProperties = lst_properties.FirstOrDefault(v => v.Targetname == key);
-                if(aGVProperties==null){
+                if (aGVProperties == null)
+                {
                     aGVProperties = new AGVProperties()
                         {
                             Targetname = key,
@@ -137,6 +161,7 @@
             }
 
         }
+
     }
 
 
@@ -144,135 +169,31 @@
     {
         switch (appState.SelectedType)
         {
-            case ActionType.STOPPED:
-                await ProcessMap(true);
+            case ActionType.SELECTED:
+                mapLayer = await HttpService.Execute_Get("map");
+                mapLayer.image_url = await MapService.ProcessMap(new AGVTaskModel() { url = appState.SelectedModel.url, DrawCoordinates = appState.SelectedModel.DrawCoordinates,TargetName=appState.SelectedModel.cur_target });
+                InitProperties();
+                await GetDimensions();
+                await InvokeAsync(StateHasChanged);
                 break;
+            case ActionType.CANCEL:
+            case ActionType.COMPLETE:
+                mapLayer = await HttpService.Execute_Get("map");
+                mapLayer.image_url = await MapService.ProcessMap(new AGVTaskModel() { url = appState.SelectedModel.url, DrawCoordinates = appState.SelectedModel.DrawCoordinates, TargetName = appState.SelectedModel.cur_target });
+                await InvokeAsync(StateHasChanged);
+                break;
+            case ActionType.STOPPED:
+                mapLayer.image_url = await MapService.ProcessMap(new AGVTaskModel() { url = appState.SelectedModel.url, DrawCoordinates = appState.SelectedModel.DrawCoordinates, TargetName = appState.SelectedModel.cur_target });
+                await InvokeAsync(StateHasChanged);
+                break;
+
         }
 
 
     }
 
-    private async Task ProcessMap(bool addingRoute =false)
-    {
-        try
-        {
-            lst.Clear();
-            mapLayer = await HttpService.Execute_Get("map");
-            Coordinace coordinance = await HttpService.Execute_Get("pose");
-            List<TargetPointsModel> targetPointsModels = await HttpService.Execute_Get("android_target");
-            //  List<TargetPolygon> polygons = await HttpService.Execute_Get("special_polygon");
-            List<List<double>> restrictArea = await HttpService.Execute_Get("restrict_layer");
-            byte[] imageBytes = Convert.FromBase64String(mapLayer.image_url.Replace("data:image/png;base64,","").Trim());
-            FontCollection collection = new();
-            FontFamily family = collection.Add(@"C:\Windows\Fonts\simhei.ttf");
-            Font font = family.CreateFont(12, FontStyle.Italic);
-            Font sp_font = family.CreateFont(24, FontStyle.Bold);
-            using(Image img = Image.Load(imageBytes))
-            {  
-                img.Mutate(x => x.Resize(mapLayer.width, mapLayer.height));
-                if(targetPointsModels!=null && targetPointsModels.Count>0){
-                    foreach(var item in targetPointsModels)
-                    {
-                        var px = (item.coordinace.x - mapLayer.origin_x) * 20;//(12.74 + item.coordinace.x) * 20; //12.74
-                        var py = mapLayer.height -((item.coordinace.y - mapLayer.origin_y) * 20); //(20.12 - item.coordinace.y) * 20; //20.12
-                        IPath cur_position = new EllipsePolygon((float)px, (float)py, radius: 10.0f);
-                        img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, cur_position));
-                        img.Mutate(x=> x.DrawText(item.name, font, SixLabors.ImageSharp.Color.Black, new PointF((float)px-4, (float)py-5)));
-                        lst.TryAdd(item.name, new Coordinace() { x = px, y = py });
-
-                    }
-                }
-                if(coordinace!=null){
-                    var px_xiaoche = (coordinance.x - mapLayer.origin_x) * 20; //(12.74 + coordinance.x) * 20;
-                    var py_xiaoche = mapLayer.height -((coordinance.y - mapLayer.origin_y) * 20); //(20.12 - coordinance.y) * 20;
-                    IPath cur_position_xiaoche = new EllipsePolygon((float)px_xiaoche, (float)py_xiaoche, radius: 10.0f);
-                    img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Yellow, cur_position_xiaoche));
-                    img.Mutate(x => x.DrawText("车", font, SixLabors.ImageSharp.Color.Black, new PointF((float)px_xiaoche - 4, (float)py_xiaoche - 5)));
-                }
+ 
 
 
-
-                if (restrictArea != null && restrictArea.Count > 0)
-                {
-                    var linePen = new Pen(SixLabors.ImageSharp.Color.Red, 2.5f);
-                    var points = new PointF[restrictArea.Count];
-                    for (int i = 0; i < restrictArea.Count; i++)
-                    {
-                        var px = (restrictArea[i][0] - mapLayer.origin_x) * 20;
-                        var py = mapLayer.height -((restrictArea[i][1] - mapLayer.origin_y) * 20);
-
-                        IPath yourPolygon = new Star(x: (float)px, y: (float)py, prongs: 5, innerRadii: 0.5f, outerRadii: 2.0f);
-                        img.Mutate(x => x.Fill(SixLabors.ImageSharp.Color.Red, yourPolygon)); 
-
-                    }
-                }
-
-                //if(polygons!=null && polygons.Count>0)
-                //{
-                //    foreach (var item in polygons)
-                //    {
-                //        var linePen = new Pen(SixLabors.ImageSharp.Color.Red, 2.5f);
-                //        var points = new PointF[item.polygon.Count];
-                //        double mid_x = 0;
-                //        double mid_y = 0;
-                //        for(int i=0; i<item.polygon.Count; i++){
-                //            var px=(12.74 + item.polygon[i][0]) *20;
-                //            var py = (20.12 - item.polygon[i][1]) * 20;
-                //            if(i==item.polygon.Count/2){
-                //                 mid_x=px;
-                //                mid_y = py;
-                //            }
-                //            points[i] = new PointF((float)px, (float)py);
-                //        }
-                //        img.Mutate(x => x.DrawLines(linePen, points));
-                //        img.Mutate(x => x.DrawText(item.name, sp_font, SixLabors.ImageSharp.Color.Black, new PointF((float)mid_x -100, (float)mid_y - 20)));
-                //        img.Mutate(x => x.DrawText(item.speed.ToString()+ "m/s", sp_font, SixLabors.ImageSharp.Color.Black, new PointF((float)mid_x - 100, (float)mid_y)));
-                //    }
-                //}
-
-
-                if (addingRoute)
-                {
-                    var linePen = new Pen(SixLabors.ImageSharp.Color.Blue, 2.5f);
-                    var plans = appState.SelectedModel.DrawCoordinates;
-                    var points = new PointF[plans.Count];
-
-                    for( int i =0; i<plans.Count; i++)
-                    {
-                        var px = (plans[i].x - mapLayer.origin_x) * 20; //(12.74 + plans[i].x) * 20; 
-                        var py =mapLayer.height - ((plans[i].y - mapLayer.origin_y) * 20);//(20.12 - plans[i].y) * 20;
-                        points[i] = new PointF((float)px, (float)py);
-                    }
-                     img.Mutate(x => x.DrawLines(linePen, points));
-                   
-                }
-
-            await SaveImg(img);
-
-          }
-
-
-
-        }
-        catch (Exception ex)
-        {
-
-            LogService.LogMessage("processmap" + ex.Message);
-        }
-
-
-    }
-
-    private async Task SaveImg(Image img)
-    {
-        using (MemoryStream m = new MemoryStream())
-        {
-
-            img.Save(m, new PngEncoder());
-            byte[] _imageBytes = m.ToArray();
-            mapLayer.image_url="data:image/png;base64," + Convert.ToBase64String(_imageBytes);
-            await this.InvokeAsync(() => this.StateHasChanged());
-        }
-    }
   
 }
