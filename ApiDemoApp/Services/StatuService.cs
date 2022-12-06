@@ -20,7 +20,7 @@ namespace ApiDemoApp.Services
                             timer = DateTime.Now,
 
                         };
-                        await UpdateEvent?.Invoke(aGV);
+                              await UpdateEvent?.Invoke(aGV);
                     }
                     await Task.Delay(1000); 
                 }

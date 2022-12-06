@@ -39,16 +39,19 @@
     string cur_speed;
     string agv_info;
     Color btnColor;
+    bool hold_on;
     MoveStatus moveStatus;
     Coordinace coordinace;
     AGVSpeed aGVSpeed;
     List<AGVTaskModel> lst;
+
     protected override void OnInitialized()
     {
 
         appState.OnChange += ReceivedModel;
         StatuService.UpdateEvent += RegisterTimeService;
         NavTaskService.UpdateStatus += OnNaviDataArrival;
+
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -85,7 +88,8 @@
                         {
                             if (pair.Name == appState.SelectedModel.name)
                             {
-                                appState.SelectedModel.cur_target = NavTaskService.routes[pair.Name].Peek();
+                                AGVProperties cur_prop = NavTaskService.routes[pair.Name].Peek();
+                                appState.SelectedModel.cur_target = cur_prop.Targetname;
                                 aGVSpeed = await HttpService.Execute_Get("speed");
                                 if(aGVSpeed!=null){
                                     if (aGVSpeed.vx > 0)
@@ -108,22 +112,47 @@
                         }
                         break;
                     case 3:
-                        if (pair.Name == appState.SelectedModel.name)
                         {
-                            ShowSanckBar("完成" + appState.SelectedModel.cur_target + " 目标点导航");
-                        }
-                        if (NavTaskService.routes.ContainsKey(pair.Name))
-                        {
-                            if (NavTaskService.routes[pair.Name].Count > 0)
+                            hold_on = true;
+                            if (pair.Name == appState.SelectedModel.name)
                             {
-
-                                NavTaskService.routes[pair.Name].Dequeue();
-                                if (NavTaskService.routes[pair.Name].Count > 0)
-                                    await Process_Naviage(pair);
-                                else
-                                    SendCompleted(pair);
+                                ShowSanckBar("完成" + appState.SelectedModel.cur_target + " 目标点导航");
                             }
-                        }
+                            if (NavTaskService.routes.ContainsKey(pair.Name))
+                            {
+                                if (NavTaskService.routes[pair.Name].Count > 0)
+                                {
+                                    AGVProperties cur_prop = NavTaskService.routes[pair.Name].Peek();
+                                    if (cur_prop.isUnlockOnArrial)
+                                    {
+                                        await HttpService.Execute_Post("unlock", pair.Name);
+                                    }
+
+                                    if (cur_prop.StayTime > 0)
+                                    {
+                                        await HttpService.Execute_Post("cancel_goal", null, pair.Name);
+
+                                        await Task.Delay(cur_prop.StayTime * 1000);
+                                        await HttpService.Execute_Post("resume_nav", null, pair.Name);
+                                      //  Console.WriteLine(cur_prop.StayTime);
+
+                                    }
+                                    NavTaskService.routes[pair.Name].Dequeue();
+                                    if (NavTaskService.routes[pair.Name].Count > 0)
+                                    {
+                                        await Process_Naviage(pair);
+                                    }
+
+                                    else
+                                        SendCompleted(pair);
+                                }
+                            }
+                            hold_on = false;
+
+                            }
+                           
+                      
+
 
                         break;
 
@@ -146,21 +175,36 @@
             appState.SelectedModel.cur_target = "";
             appState.SetModel(appState.SelectedModel, ActionType.COMPLETE);
         }
-          
+
     }
 
     private async Task Process_Naviage(MoveStatus pair)
     {
+
         if(NavTaskService.routes.ContainsKey(pair.Name)){
             if (NavTaskService.routes[pair.Name].Count > 0) {
-                string target = NavTaskService.routes[pair.Name].Peek();
-                string payload = JsonSerializer.Serialize(new TargetName() { point = target });
-                await HttpService.Execute_Post("nav_point", payload, pair.Name);
+                AGVProperties target = NavTaskService.routes[pair.Name].Peek();
+                if (target.isLockedOnLeave)
+                    await HttpService.Execute_Post("lock", null, pair.Name);
+                if(target.Targetname.Contains("x"))
+                {
+                    await HttpService.Execute_Post("nav", target.Targetname);
+                }
+                else
+                {
+                      string payload = JsonSerializer.Serialize(new TargetName() { point = target.Targetname });
+                      await HttpService.Execute_Post("nav_point", payload, pair.Name);
+                }
+             
 
             }
 
         }
     }
+
+    
+
+  
 
     public async void ReceivedModel()
     {
@@ -259,6 +303,7 @@
     {
         try
         {
+            if(!hold_on)
             await Process_DrawandSpeed(pair);
            
 
@@ -317,4 +362,4 @@
     }
 }
    
-}
+

@@ -13,9 +13,7 @@ namespace ApiDemoApp.Services
             try
             {
                     ISchedulerFactory sf = new StdSchedulerFactory();
-                     HttpService.Base_URL =  model.url;
-                    Coordinace start_point = await HttpService.Execute_Get("pose");
-                        var scheduler = await sf.GetScheduler();
+                    var scheduler = await sf.GetScheduler();
                     IJobDetail job = JobBuilder.Create<ScheduleJobService>()
                    .WithIdentity(model.Title, model.AGV_No)
                    .UsingJobData("data", JsonSerializer.Serialize(model))

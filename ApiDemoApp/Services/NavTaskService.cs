@@ -9,7 +9,7 @@ namespace ApiDemoApp.Services
 {
     public class NavTaskService : BackgroundService
     {
-        public static Dictionary<string, Queue<string>> routes = new Dictionary<string, Queue<string>>();
+        public static Dictionary<string, Queue<AGVProperties>> routes = new Dictionary<string, Queue<AGVProperties>>();
         public static event Func<MoveStatus, Task> UpdateStatus;
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -21,20 +21,23 @@ namespace ApiDemoApp.Services
                     {
                         try
                         {
-                            UpdateStatus?.Invoke(new MoveStatus()
-                            {
-                                Name = key,
-                                status = await HttpService.Execute_Get("movebase_status", key)
-                            });
+                                UpdateStatus?.Invoke(new MoveStatus()
+                                {
+                                    Name = key,
+                                    status = await HttpService.Execute_Get("movebase_status", key)
+                                });
+                          
                         }
                         catch (Exception ex)
                         {
                         }
-                       
+
                     }
                 }
                 await Task.Delay(1000);
             }
         }
+
+       
     }
 }

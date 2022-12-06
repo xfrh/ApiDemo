@@ -24,7 +24,6 @@ builder.Services.AddHostedService<StatuService>();
 builder.Services.AddHostedService<NavTaskService>();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ISchedulerFactory, StdSchedulerFactory>();
-
 builder.Services.AddHttpClient("cmd", c => {
     c.BaseAddress = new Uri(builder.Configuration["cmd"]);
     });

@@ -14,7 +14,7 @@
 
 <MudGrid Class="pa-4 mt-16"  >
     <MudItem xs="12" sm="5"  >
-        <EditForm Model="@model"  OnValidSubmit="OnValidSubmit"  >
+        <EditForm Model="@model"  OnValidSubmit="OnValidSubmit" Context="FormContext" >
             <DataAnnotationsValidator />
             <MudCard Outlined="true" >
                 <MudCardContent class="d-flex  flex-grow-1 gap-4">
@@ -29,13 +29,38 @@
                             <MudTimePicker @bind-Time="time" />
                         </MudField>
                     </MudItem>
-
-                  
-                  
-                  
                      </MudCardContent>
                    </MudCard>
-                   <MudCard>
+           
+            <MudCard>
+                <MudCardContent>
+                         <MudItem xs="12">
+                   
+                        <MudTable Items="@lst_properties" Hover="true" Breakpoint="Breakpoint.Sm" Loading="@_loading" LoadingProgressColor="Color.Info" Height="265px" FixedHeader="true" Filter="new Func<AGVProperties, bool>(Search)" Striped=true Dense=true >
+                            <ToolBarContent>
+                        <MudText Typo="Typo.inherit">设置目标点属性</MudText>
+                        <MudSpacer />
+                        <MudTextField @bind-Value="searchString" Placeholder="搜索目标..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                       </ToolBarContent>
+                            
+                            <HeaderContent>
+                            <MudTh>目标名称</MudTh>
+                            <MudTh>到达后断电</MudTh>
+                            <MudTh>离开后上电</MudTh>
+                            <MudTh>停留时长(秒)</MudTh>
+                         </HeaderContent>
+                           <RowTemplate  >
+                                <MudTd DataLabel="目标名称">@context.Targetname</MudTd>
+                                 <MudTd DataLabel="到达后断电" ><MudCheckBox @bind-Checked="@context.isUnlockOnArrial" Label="断电"></MudCheckBox></MudTd>
+                                <MudTd DataLabel="离开后上电"><MudCheckBox @bind-Checked="@context.isLockedOnLeave" Label="上电"></MudCheckBox></MudTd>
+                                <MudTd DataLabel="停留时长" ><MudTextField @bind-Value="@context.StayTime" Variant="Variant.Text" HelperText="停留时长" HelperTextOnFocus="true" Adornment="Adornment.End" AdornmentIcon="@Icons.Filled.Timer"></MudTextField></MudTd>
+                             </RowTemplate>
+                        </MudTable>
+                    </MudItem>
+                   
+                </MudCardContent>
+            </MudCard>
+             <MudCard>
                 <MudCardContent class="d-flex  flex-grow-1 gap-4">
                   
 
@@ -58,6 +83,7 @@
                     </MudItem>
                 </MudCardContent>
             </MudCard>
+
             <MudCard>
                 <MudCardContent class="d-flex  flex-grow-1 gap-4">
                     <MudItem xs="12" sm="6" md="6">
@@ -70,8 +96,9 @@
                         </MudSelect>
                          <ValidationMessage For="@(() => model.WeekOptions)" />
                     </MudItem>
-                       <MudItem xs="12" sm="6" md="6">
-                        <MudSelect Label="目标点" MultiSelection="true" @bind-Value="target_value" @bind-SelectedValues="model.TargetOptions">
+                   <MudItem xs="12" sm="6" md="6">
+                     
+                            <MudSelect Label="目标点执行顺序" MultiSelection="true" @bind-Value="target_value" @bind-SelectedValues="model.TargetOptions">
                             @foreach (var target in targets)
                             {
                                 <MudSelectItem Value="@target">@target</MudSelectItem>
@@ -79,7 +106,7 @@
                         </MudSelect>
                          <ValidationMessage For="@(() => model.TargetOptions)" />
                     </MudItem>
-                   
+
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">注册</MudButton>
@@ -134,6 +161,7 @@
     AGVTaskModel _selectedItem;
     bool success;
     private MudTable<AGVTaskModel> mudTable;
+    private string searchString = "";
     TimeSpan? time = new TimeSpan(00, 00, 00);
     string schedulModel = "0 0 12 ? *";
     private string week_value { get; set; } = "Nothing selected";
@@ -153,10 +181,20 @@
             targets.Clear();
             start_point = await HttpService.Execute_Get("pose");
             lst = await localStorage.GetItemAsync<List<AGVTaskModel>>("agv_task");
-            lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
+            //   lst_properties = await localStorage.GetItemAsync<List<AGVProperties>>("target_properties");
+            lst_properties = new List<AGVProperties>();
             List<TargetPointsModel> pp = await HttpService.Execute_Get("android_target");
-            foreach (var p in pp)
+            foreach (var p in pp){
                 targets.Add(p.name);
+                lst_properties.Add(new AGVProperties()
+                {
+                    Targetname=p.name,
+                    isLockedOnLeave=false,
+                    isUnlockOnArrial=false,
+                    StayTime=0
+                });
+            }
+
             if (lst == null)
                 lst = new List<AGVTaskModel>();
             _isMonitor = lst.Count == 0;
@@ -168,7 +206,6 @@
         }
 
     }
-
 
 
     private async void OnValidSubmit(EditContext context)
@@ -212,18 +249,49 @@
         model.Mark = appState.SelectedModel.Mark;
         model.StartTime = time;
         model.TargetName="";
-        
+        model.properties = new List<AGVProperties>();
         foreach(var item in model.TargetOptions){
             temp += item + ",";
+            AGVProperties p = lst_properties.FirstOrDefault(v => v.Targetname == item);
+            if (p != null)
+                model.properties.Add(p);
         }
         model.url = appState.SelectedModel.url;
         model.TargetName = temp.TrimEnd(',');
-        model.properties = JsonSerializer.Serialize(lst_properties);
+        if (model.AfterTask){
+            model.properties.Add(new AGVProperties()
+            {
+                isLockedOnLeave=true,
+                isUnlockOnArrial=true,
+                StayTime=0,
+                Targetname="充电桩"
+
+            });
+        }
+        else
+        {
+            Coordinace coordinace = await HttpService.Execute_Get("pose");
+            if(coordinace!=null){
+                model.properties.Add(new AGVProperties()
+                    {
+                        isLockedOnLeave = true,
+                        isUnlockOnArrial = true,
+                        StayTime = 0,
+                        Targetname = JsonSerializer.Serialize(coordinace)
+                     }
+                );
+            }
+        }
+        model.routes = new Queue<AGVProperties>();
+        foreach (var item in model.properties)
+        model.routes.Enqueue(item);
+
         TimeJobService.EditShowList(model);
         lst.Add(model);
         await localStorage.SetItemAsync<List<AGVTaskModel>>("agv_task", lst);
         _isMonitor = false;
         appState.SetModel(appState.SelectedModel, ActionType.ADDTASK);
+        
         await TimeJobService.AddToSchedule(model);
         await this.InvokeAsync(() => this.StateHasChanged());
         model = new AGVTaskModel();
@@ -235,7 +303,15 @@
             appState.SetModel(appState.SelectedModel, ActionType.WATCHLIST);
     }
   
- 
+    private bool Search(AGVProperties map)
+    {
+        if (string.IsNullOrWhiteSpace(searchString)) return true;
+        if (map.Targetname==searchString)
+        {
+            return true;
+        }
+        return false;
+    }
 
     private async void RowClick(TableRowClickEventArgs<AGVTaskModel> tableRowClickEventArgs)
     {

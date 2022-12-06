@@ -19,7 +19,7 @@
 
 @code {
     List<RegisterAGVFrom> lst =new List<RegisterAGVFrom>();
-   
+
     protected override void OnInitialized()
     {
         appState.OnChange += ReceiveData;
@@ -51,7 +51,7 @@
         if (appState.SelectedModel != null) {
             switch(appState.SelectedType)
             {
-              
+
                 case ActionType.ADD:
                     {
                         lst.Add(appState.SelectedModel);
@@ -89,6 +89,8 @@
 
         HttpService.Base_URL = _model.url;
         _model.DrawCoordinates = new List<Coordinace>();
+        if (!HttpService.myIps.ContainsKey(_model.name))
+            HttpService.myIps.TryAdd(_model.name, _model.url);
         appState.SetModel(_model, ActionType.SELECTED);
         _navigationManager.NavigateTo("/map");
       

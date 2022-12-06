@@ -29,6 +29,7 @@ namespace ApiDemoApp.Models
         public AGVSpeed SelectedAGVSpeed { get; set; }
 
         public List<Coordinace> DrawCoordinates { get; set; }
+
         public int Mark { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;

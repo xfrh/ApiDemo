@@ -16,7 +16,7 @@
      <MudContainer MaxWidth="MaxWidth.Medium"  >
            <MudPaper Height="400px" Width="100%" Square="true" Elevation="0">
             <MudElement @bind-Ref="_mudImag" HtmlTag="input" Style="visibility:hidden" />
-            <MudImage Src="@mapLayer.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height" onmousedown="@Mouse_Move"   />
+            <MudImage Src="@mapLayer.image_url" Alt="地图加载中..." Elevation="0" Class="rounded-lg" Width="@mapLayer.width" Height="@mapLayer.height"  />
          </MudPaper>
       
       
@@ -55,7 +55,7 @@
         mapLayer = await HttpService.Execute_Get("map");
         mapLayer.image_url = await MapService.ProcessMap(new AGVTaskModel() { url = appState.SelectedModel.url });
         InitProperties();
-        await GetDimensions();
+      //  await GetDimensions();
         appState.OnChange += ReceiveData;
         await InvokeAsync(StateHasChanged);
     }
@@ -173,7 +173,7 @@
                 mapLayer = await HttpService.Execute_Get("map");
                 mapLayer.image_url = await MapService.ProcessMap(new AGVTaskModel() { url = appState.SelectedModel.url, DrawCoordinates = appState.SelectedModel.DrawCoordinates,TargetName=appState.SelectedModel.cur_target });
                 InitProperties();
-                await GetDimensions();
+             //   await GetDimensions();
                 await InvokeAsync(StateHasChanged);
                 break;
             case ActionType.CANCEL:

@@ -1,8 +1,10 @@
 ﻿using ApiDemoApp.Models;
+using Quartz.Util;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 
 namespace ApiDemoApp.Services
 {
@@ -102,7 +104,6 @@ namespace ApiDemoApp.Services
                 return null;
             }
         }
-
 		public static async Task<string> Execute_Post(string cmdname,string payload,string ip=null)
 		{
             try
@@ -131,8 +132,6 @@ namespace ApiDemoApp.Services
                 LogService.LogMessage("Execute_Post:"+ cmdname + ex.Message);
             }
 		}
-
-
         public static async Task<string> UploadMap(MultipartFormDataContent content,string ip=null)
         {
             try
@@ -231,7 +230,77 @@ namespace ApiDemoApp.Services
                 return null;
             }
         }
+        #region Lanxin
+        public static async Task<TaskResult> AddTask(Dictionary<TaskChain,List<LanxinTask>> value)
+        {
+             using (var client = new HttpClient())
+            {
+                try
+                {
+                    client.DefaultRequestHeaders.Add("name", "lx-panel");
+                    client.DefaultRequestHeaders.Add("token", "123456");
+                    string call_url = "http://" + Base_URL + "/task/add";
+                    string payload = JsonSerializer.Serialize(value);
+                    var httpContent = new StringContent(payload, Encoding.UTF8, "application/json");
+                    var httpResponse = await client.PostAsync(call_url, httpContent);
+                    httpResponse.EnsureSuccessStatusCode();
+                    string responseBody = await httpResponse.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<TaskResult>(responseBody);
+                }
+                catch (Exception ex)
+                {
 
-    
+                    LogService.LogMessage("addTask " + ex.Message);
+                    return null;
+                }
+            
+            }
+        }
+        public static async Task<TaskReceive>TaskInfo(Dictionary<TaskChainPo, TaskPo> value)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Add("name", "lx-panel");
+                    client.DefaultRequestHeaders.Add("token", "123456");
+                    string call_url = "http://" + Base_URL + "/push/taskInfo";
+                    string payload = JsonSerializer.Serialize(value);
+                    var httpContent = new StringContent(payload, Encoding.UTF8, "application/json");
+                    var httpResponse = await client.PostAsync(call_url, httpContent);
+                    httpResponse.EnsureSuccessStatusCode();
+                    string responseBody = await httpResponse.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<TaskReceive>(responseBody);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage("TaskInfo " + ex.Message);
+                return null;
+            }
+        }
+
+        public static async Task<TaskChainResponse> GetTaskChainByIds(string ids)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.DefaultRequestHeaders.Add("name", "lx-panel");
+                    client.DefaultRequestHeaders.Add("token", "123456");
+                    string call_url = "http://" + Base_URL + "/task/getTaskChainByIds?taskChainIds=" + ids;
+                    return await client.GetFromJsonAsync<TaskChainResponse>(call_url);
+                }
+            }
+            catch (Exception ex)
+            {
+
+                LogService.LogMessage("GetTaskChainByIds " + ex.Message);
+                return null;
+            }
+        }
+
+        #endregion
     }
 }

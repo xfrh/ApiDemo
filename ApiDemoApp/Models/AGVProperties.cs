@@ -9,8 +9,6 @@ namespace ApiDemoApp.Models
         public int StayTime { get; set; }
         public bool isUnlockOnArrial { get; set; }
         public bool isLockedOnLeave { get; set; }
-
-        public string Targetname { get; set; }
-
+       public string Targetname { get; set; }
     }
 }

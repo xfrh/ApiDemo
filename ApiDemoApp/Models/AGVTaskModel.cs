@@ -20,13 +20,13 @@ namespace ApiDemoApp.Models
         public string TargetName { get; set; }
  
         public bool AfterTask { get; set; }
-        public string properties { get; set; }
+        public List<AGVProperties> properties { get; set; }
 
         public string url { get; set; }
 
         public List<Coordinace> DrawCoordinates { get; set; }
 
-        public Queue<string> routes { get; set; }
+        public Queue<AGVProperties> routes { get; set; }
         public int Mark { get; set; }
     }
 }

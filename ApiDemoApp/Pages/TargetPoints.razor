@@ -84,10 +84,10 @@
                 }
                 if (appState.SelectedType == ActionType.COMPLETE)
                 {
-                     InitUiComponets();
-                    
+                    InitUiComponets();
+
                 }
-                   
+
 
             }
         }
@@ -117,19 +117,19 @@
             searchString = !All_Checked ? temp : "";
             StateHasChanged();
         }
-       
+
     }
 
     async void InitUiComponets(){
 
-           
-            searchString = "";
-            isAllChecked = false;
-            All_Checked = false;
-            isNaved = false;
-            isCharge = false;
-            isCancelled = true;
-           if(lst!=null){
+
+        searchString = "";
+        isAllChecked = false;
+        All_Checked = false;
+        isNaved = false;
+        isCharge = false;
+        isCancelled = true;
+        if(lst!=null){
             foreach (var item in lst)
             {
                 item.isCheckable = false;
@@ -137,9 +137,9 @@
                 item.isPaused = true;
                 item.isStarted = true;
             }
-           }
-         
-         await InvokeAsync(StateHasChanged);
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 
 
@@ -147,32 +147,33 @@
         try
         {
             if(NavTaskService.routes.ContainsKey(appState.SelectedModel.name)){
-                  Queue<string> online_targets = NavTaskService.routes[appState.SelectedModel.name];
-            if (online_targets.Count > 0)
-            {
-                isAllChecked = true;
-                isNaved = true;
-                isCharge = true;
-                isCancelled = false;
-                searchString ="";
-                foreach (var item in lst)
+                Queue<AGVProperties> online_targets = NavTaskService.routes[appState.SelectedModel.name];
+                if (online_targets.Count > 0)
                 {
-                    item.isCheckable = true;
-                    item.isChecked = online_targets.Contains(item.name) || item.name == cur_target;
-                    item.isStarted = true;
-                    item.isPaused = item.name ==cur_target ? false : true;
-                }
-                List<string> mms = online_targets.ToList();
-                foreach (var item in mms)
-                {
-                    searchString += item + " ";
-                }
+                    isAllChecked = true;
+                    isNaved = true;
+                    isCharge = true;
+                    isCancelled = false;
+                    searchString ="";
+                    foreach (var item in lst)
+                    {
+                        item.isCheckable = true;
+                        item.isChecked = online_targets.FirstOrDefault(v=>v.Targetname==item.name)!=null || item.name == cur_target;
+                        item.isStarted = true;
+                        item.isPaused = item.name ==cur_target ? false : true;
+                    }
+                    List<AGVProperties> mms = online_targets.ToList();
+                    foreach (var item in mms)
+                    {
+                       if(!item.Targetname.Contains("x"))
+                         searchString += item.Targetname + " ";
+                    }
 
-                searchString = searchString.Trim();
-                await InvokeAsync(StateHasChanged);
+                    searchString = searchString.Trim();
+                    await InvokeAsync(StateHasChanged);
+                }
             }
-            }
-          
+
         }
         catch (Exception ex)
         {
@@ -269,8 +270,13 @@
         }
 
         StateHasChanged();
-        Queue<string> temp_que = new Queue<string>();
-        temp_que.Enqueue("充电桩");
+        Queue<AGVProperties> temp_que = new Queue<AGVProperties>();
+        temp_que.Enqueue(new AGVProperties(){
+            isLockedOnLeave=true,
+            isUnlockOnArrial=true,
+            StayTime=0,
+            Targetname="充电桩"
+        });
         NavTaskService.routes.TryAdd(appState.SelectedModel.name, temp_que);
         appState.SetModel(appState.SelectedModel, ActionType.CHARGE);
     }
@@ -294,7 +300,7 @@
 
     void InitQue(){
 
-       
+
         if (NavTaskService.routes != null)
         {
             if (NavTaskService.routes.ContainsKey(appState.SelectedModel.name))
@@ -309,16 +315,21 @@
     {
         try
         {
-               if (string.IsNullOrEmpty(searchString)) return;
+            if (string.IsNullOrEmpty(searchString)) return;
             InitQue();
             string[] targets = searchString.Split(" ");
-            Queue<string> temp_que = new Queue<string>();
+            Queue<AGVProperties> temp_que = new Queue<AGVProperties>();
             for (int i = 0; i < targets.Length; i++)
             {
                 var name = targets[i].Trim();
                 if (!string.IsNullOrEmpty(name)){
-                    temp_que.Enqueue(name.Trim());
-           
+                    temp_que.Enqueue(new AGVProperties() { 
+                     isLockedOnLeave=true,
+                     isUnlockOnArrial=true,
+                     StayTime=0,
+                     Targetname=name
+                    });
+
                 }
             }
             NavTaskService.routes.TryAdd(appState.SelectedModel.name, temp_que);

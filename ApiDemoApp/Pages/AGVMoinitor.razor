@@ -71,7 +71,7 @@
                         Width = small_width,
                         Height = small_height
                     },
-
+                    properties=item.properties,
                     Identifier = "Drop Zone 1"
                 });
         }
@@ -98,7 +98,7 @@
                 }
                 InitZoneTwo();
                 q.Identifier = "Drop Zone 2";
-
+                q.properties = model.properties;
                 mapLayer = await HttpService.Execute_Get("map", model.AGV_No);
                 q.image = new MudImage()
                     {
@@ -144,14 +144,6 @@
 
     void PrepareNav(AGVTaskModel model) {
 
-        //if (NavTaskService.routes != null)
-        //{
-        //    if (NavTaskService.routes.ContainsKey(model.AGV_No))
-        //        NavTaskService.routes.Remove(model.AGV_No);
-        //}
-        //appState.SelectedModel.DrawCoordinates = new List<Coordinace>();
-        //NavTaskService.routes.TryAdd(model.AGV_No, model.routes);
-        //appState.SetModel(appState.SelectedModel, ActionType.NAVIGATE);
         var p = agv_lst.FirstOrDefault(v => v.name == model.AGV_No);
         if (p != null)
         {
@@ -188,49 +180,47 @@
         HttpService.Base_URL = dropItem.Item.Url;
         var q = lst.FirstOrDefault(v => v.Title == dropItem.Item.Name);
         if (q == null) return;
-        mapLayer = await HttpService.Execute_Get("map", q.AGV_No);
+        mapLayer = await HttpService.Execute_Get("map");
         if (dropItem.Item.Identifier == "Drop Zone 2")
         {
-              
-                dropItem.Item.image.Src = mapLayer.image_url;
-                dropItem.Item.image.Width = mapLayer.width;
-                dropItem.Item.image.Height = mapLayer.height;
-                btnDisabled = false;
-                selectedname = dropItem.Item.Name;
 
-                Queue<string> que = new Queue<string>();
-                string[] targets = q.TargetName.Split(",");
-                for (int i = 0; i < targets.Length; i++)
-                {
-                    var name = targets[i].Trim();
-                    if (!string.IsNullOrEmpty(name))
-                        que.Enqueue(name);
-                }
-                PrepareNav(new AGVTaskModel()
+            dropItem.Item.image.Src = mapLayer.image_url;
+            dropItem.Item.image.Width = mapLayer.width;
+            dropItem.Item.image.Height = mapLayer.height;
+            btnDisabled = false;
+            selectedname = dropItem.Item.Name;
+
+            Queue<AGVProperties> que = new Queue<AGVProperties>();
+            foreach (var item in dropItem.Item.properties)
+            {
+                que.Enqueue(item);
+            }
+            PrepareNav(new AGVTaskModel()
                 {
                     AGV_No=q.AGV_No,
                     url=q.url,
                     routes=que
+
                 });
-         
+
 
         }
         else
         {
-             
-                dropItem.Item.image.Src = mapLayer.image_url;
-                dropItem.Item.image.Width = small_width;
-                dropItem.Item.image.Height = small_height;
-                btnDisabled = true;
-                selectedname = "";
-                var pp = agv_lst.FirstOrDefault(v => v.name == q.AGV_No);
-                appState.SelectedModel = pp;
-                HttpService.Base_URL=pp.url;
-                appState.SetModel(appState.SelectedModel, ActionType.CANCEL);
-          
-            }
-            StateHasChanged();
+
+            dropItem.Item.image.Src = mapLayer.image_url;
+            dropItem.Item.image.Width = small_width;
+            dropItem.Item.image.Height = small_height;
+            btnDisabled = true;
+            selectedname = "";
+            var pp = agv_lst.FirstOrDefault(v => v.name == q.AGV_No);
+            appState.SelectedModel = pp;
+            HttpService.Base_URL=pp.url;
+            appState.SetModel(appState.SelectedModel, ActionType.CANCEL);
+
         }
+        StateHasChanged();
+    }
 
 
 
@@ -241,7 +231,8 @@
         public string StartTime { get; set; }
         public string Url { get; set; }
         public MudImage image { get; set; }
-     
+        public List<AGVProperties> properties{ get; set; }
+
 
     }
     

@@ -126,6 +126,7 @@
                 NavTaskService.routes.TryAdd(avt.AGV_No, avt.routes);
                 if (!HttpService.myIps.ContainsKey(avt.AGV_No))
                     HttpService.myIps.TryAdd(avt.AGV_No, avt.url);
+            
                 appState.SetModel(appState.SelectedModel, ActionType.NAVIGATE);
 
                 _navigationManager.NavigateTo("/map");
